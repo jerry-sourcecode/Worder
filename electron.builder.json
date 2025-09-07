@@ -1,19 +1,22 @@
 {
-	"productName": "Worder",
-	"files": [
-		"./dist-electron/main.js",
-		"./dist-electron/preload.mjs",
-		"./dist"
-	],
-	"extraFiles": ["./videos", "./cvideo"],
-	"directories": {
-		"output": "./builder"
-	},
-	"nsis": {
-		"oneClick": false,
-		"allowToChangeInstallationDirectory": true,
-		"createDesktopShortcut": true,
-		"deleteAppDataOnUninstall": true,
-		"runAfterFinish": true
-	}
+  "productName": "Worder",
+  "files": [
+    "./dist-electron/main.js",
+    "./dist-electron/preload.mjs",
+    "./dist"
+  ],
+  "extraFiles": [
+    "./videos",
+    "./cvideo"
+  ],
+  "directories": {
+    "output": "./builder"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "deleteAppDataOnUninstall": true,
+    "runAfterFinish": true
+  }
 }

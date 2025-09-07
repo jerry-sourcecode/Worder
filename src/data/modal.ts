@@ -1,297 +1,322 @@
-import { calculateProficiency } from "@/utils/utils";
+import { calcProficiency } from '@/utils/utils';
 
 type ReviewInfo = {
-  /** 首次学习时间 */
-  firstLearned: Date;
-  /** 上次复习正确时间 */
-  lastCorrect: Date | null;
-  /** 上次复习错误时间 */
-  lastWrong: Date | null;
-  /** 正确复习次数 */
-  rightReviewCount: number;
-  /** 错误复习次数 */
-  wrongReviewCount: number;
+    /** 首次学习时间 */
+    firstLearned: Date;
+    /** 上次复习正确时间 */
+    lastCorrect: Date | null;
+    /** 上次复习错误时间 */
+    lastWrong: Date | null;
+    /** 正确复习次数 */
+    rightReviewCount: number;
+    /** 错误复习次数 */
+    wrongReviewCount: number;
 };
 
+// 复习的方式，即复习时展示的元素
+const ReviewMode = {
+    /** 展示单词，要求写出意思 */
+    ByWord: 0,
+    /** 展示意思，要求写出单词 */
+    ByMeaning: 1,
+} as const;
+type ReviewMode = (typeof ReviewMode)[keyof typeof ReviewMode];
+
 class Word {
-  /** 单词文本 */
-  text: string;
-  /** 词义 */
-  private _meaning: WordMeaningSet[];
-  /** 单词的唯一标识 */
-  private readonly _id: number;
+    /** 单词文本 */
+    text: string;
+    /** 词义 */
+    private _meaning: WordMeaningSet[];
+    /** 单词的唯一标识 */
+    private readonly _id: number;
 
-  constructor(
-    id: number,
-    text: string,
-    meaning: (WordMeaningSet | WordMeaning[])[] = [],
-  ) {
-    this.text = text;
-    this._id = id;
-    this._meaning = [];
-    meaning.forEach((item) => {
-      if (Array.isArray(item)) {
-        this.addMeaning(item);
-      } else {
-        this.addMeaning(item);
-      }
-    });
-  }
-
-  /** 词义 */
-  get meaningSet(): WordMeaningSet[] {
-    return this._meaning;
-  }
-
-  /** 单词的唯一标识 */
-  get id(): number {
-    return this._id;
-  }
-
-  /**
-   * 增加一个词义
-   * @param meaning 词义
-   * @param partsOfSpeech 词性
-   */
-  addMeaning(meaning: WordMeaning, partsOfSpeech?: string): WordMeaningSet;
-  /**
-   * 增加一个词义
-   * @param meaning 词义
-   * @param partsOfSpeech 词性
-   */
-  addMeaning(meaning: WordMeaning[], partsOfSpeech?: string): WordMeaningSet;
-  /**
-   * 增加一个词义集
-   * @param meaning 词义集
-   */
-  addMeaning(meaning: WordMeaningSet): WordMeaningSet;
-  addMeaning(
-    meaning: WordMeaning[] | WordMeaning | WordMeaningSet,
-    partsOfSpeech: string = "unknown",
-  ): WordMeaningSet {
-    if (meaning instanceof WordMeaningSet) {
-      return this.addMeaning(meaning.meaning, meaning.POS);
-    }
-    const meaningsArray = Array.isArray(meaning) ? meaning : [meaning];
-    let hasAdd = false,
-      obj = null;
-    this._meaning.forEach((v, id) => {
-      if (v.POS === partsOfSpeech) {
-        meaningsArray.forEach((m) => v.meaning.push(m));
-        v.meaning = Array.from(new Set(v.meaning));
-        hasAdd = true;
-        obj = id;
-        return;
-      }
-    });
-    if (!hasAdd) {
-      obj =
-        this._meaning.push(new WordMeaningSet(meaningsArray, partsOfSpeech)) -
-        1;
-    }
-    return this._meaning[obj!];
-  }
-  /**
-   * 删除词义
-   * @param POS 词性
-   * @param meaning 词义
-   */
-  rmMeaning(POS: string, meaning: string): void;
-  /**
-   * 删除词义
-   * @param POSId 词性的索引
-   * @param meaningId 词义的索引
-   */
-  rmMeaning(POSId: number, meaningId: number): void;
-  rmMeaning(POS: string | number, meaning: string | number) {
-    if (typeof meaning === "string" && typeof POS === "string") {
-      this._meaning.forEach((v, id) => {
-        if (v.POS === POS) {
-          v.meaning.forEach((m, mid) => {
-            if (m.text === meaning) {
-              POS = id;
-              meaning = mid;
+    constructor(id: number, text: string, meaning: (WordMeaningSet | WordMeaning[])[] = []) {
+        this.text = text;
+        this._id = id;
+        this._meaning = [];
+        meaning.forEach((item) => {
+            if (Array.isArray(item)) {
+                this.addMeaning(item);
+            } else {
+                this.addMeaning(item);
             }
-          });
-        }
-      });
+        });
     }
-    if (typeof meaning === "number" && typeof POS === "number") {
-      this._meaning[POS].meaning.splice(meaning, 1);
-      if (this._meaning[POS].meaning.length === 0) {
-        this._meaning.splice(POS, 1);
-      }
+
+    /** 词义 */
+    get meaningSet(): WordMeaningSet[] {
+        return this._meaning;
     }
-  }
-  /**
-   * 清空词义
-   */
-  clearMeaning(): void {
-    this._meaning = [];
-  }
-  /**
-   * 尝试将相同词性合并并去重
-   */
-  mergeMeaning() {
-    const merged: Map<string, number> = new Map();
-    // 合并
-    this._meaning.forEach((v, id) => {
-      if (merged.has(v.POS)) {
-        this._meaning[merged.get(v.POS)!].meaning.push(...v.meaning);
-        this._meaning.splice(id, 1);
-      } else {
-        merged.set(v.POS, id);
-      }
-    });
-    // 去重
-    this._meaning.forEach((v) => {
-      v.meaning = Array.from(new Set(v.meaning));
-    });
-  }
-  /**
-   * 计算单词熟练度，单词熟练度被定义为其下词义中的最低熟练度
-   * @returns 熟练度信息，包括最低熟练度、对应的解释集索引和词义索引
-   */
-  calculateProficiency(): {
-    proficiency: number;
-    setid: number;
-    mid: number;
-  } {
-    let ans = -1,
-      minsid = -1,
-      minid = -1;
-    this._meaning.forEach((mset, sid) => {
-      mset.meaning.forEach((m, id) => {
-        if (m.calculateProficiency() < ans || ans === -1) {
-          ans = m.calculateProficiency();
-          minsid = sid;
-          minid = id;
+
+    /** 单词的唯一标识 */
+    get id(): number {
+        return this._id;
+    }
+
+    /**
+     * 增加一个词义
+     * @param meaning 词义
+     * @param partsOfSpeech 词性
+     */
+    addMeaning(meaning: WordMeaning, partsOfSpeech?: string): WordMeaningSet;
+    /**
+     * 增加一个词义
+     * @param meaning 词义
+     * @param partsOfSpeech 词性
+     */
+    addMeaning(meaning: WordMeaning[], partsOfSpeech?: string): WordMeaningSet;
+    /**
+     * 增加一个词义集
+     * @param meaning 词义集
+     */
+    addMeaning(meaning: WordMeaningSet): WordMeaningSet;
+    addMeaning(
+        meaning: WordMeaning[] | WordMeaning | WordMeaningSet,
+        partsOfSpeech: string = 'unknown'
+    ): WordMeaningSet {
+        if (meaning instanceof WordMeaningSet) {
+            return this.addMeaning(meaning.meaning, meaning.POS);
         }
-      });
-    });
-    if (minsid === -1)
-      throw new Error(
-        `Error while calculate proficiency: Can't find meaning in this word ${this.text}.`,
-      );
-    return {
-      proficiency: ans,
-      setid: minsid,
-      mid: minid,
-    };
-  }
+        const meaningsArray = Array.isArray(meaning) ? meaning : [meaning];
+        let hasAdd = false,
+            obj = null;
+        this._meaning.forEach((v, id) => {
+            if (v.POS === partsOfSpeech) {
+                meaningsArray.forEach((m) => v.meaning.push(m));
+                v.meaning = Array.from(new Set(v.meaning));
+                hasAdd = true;
+                obj = id;
+                return;
+            }
+        });
+        if (!hasAdd) {
+            obj = this._meaning.push(new WordMeaningSet(meaningsArray, partsOfSpeech)) - 1;
+        }
+        return this._meaning[obj!];
+    }
+    /**
+     * 删除词义
+     * @param POS 词性
+     * @param meaning 词义
+     */
+    rmMeaning(POS: string, meaning: string): void;
+    /**
+     * 删除词义
+     * @param POSId 词性的索引
+     * @param meaningId 词义的索引
+     */
+    rmMeaning(POSId: number, meaningId: number): void;
+    rmMeaning(POS: string | number, meaning: string | number) {
+        if (typeof meaning === 'string' && typeof POS === 'string') {
+            this._meaning.forEach((v, id) => {
+                if (v.POS === POS) {
+                    v.meaning.forEach((m, mid) => {
+                        if (m.text === meaning) {
+                            POS = id;
+                            meaning = mid;
+                        }
+                    });
+                }
+            });
+        }
+        if (typeof meaning === 'number' && typeof POS === 'number') {
+            this._meaning[POS].meaning.splice(meaning, 1);
+            if (this._meaning[POS].meaning.length === 0) {
+                this._meaning.splice(POS, 1);
+            }
+        }
+    }
+    /**
+     * 清空词义
+     */
+    clearMeaning(): void {
+        this._meaning = [];
+    }
+    /**
+     * 尝试将相同词性合并并去重
+     */
+    mergeMeaning() {
+        const merged: Map<string, number> = new Map();
+        // 合并
+        this._meaning.forEach((v, id) => {
+            if (merged.has(v.POS)) {
+                this._meaning[merged.get(v.POS)!].meaning.push(...v.meaning);
+                this._meaning.splice(id, 1);
+            } else {
+                merged.set(v.POS, id);
+            }
+        });
+        // 去重
+        this._meaning.forEach((v) => {
+            v.meaning = Array.from(new Set(v.meaning));
+        });
+    }
+    /**
+     * 计算单词熟练度，单词熟练度被定义为其下词义中的最低熟练度
+     * @returns 熟练度信息，包括最低熟练度、对应的解释集索引和词义索引
+     */
+    calculateProficiency(): {
+        proficiency: number;
+        setid: number;
+        mid: number;
+    } {
+        let ans = -1,
+            minsid = -1,
+            minid = -1;
+        this._meaning.forEach((mset, sid) => {
+            mset.meaning.forEach((m, id) => {
+                if (m.calcProficiency() < ans || ans === -1) {
+                    ans = m.calcProficiency();
+                    minsid = sid;
+                    minid = id;
+                }
+            });
+        });
+        if (minsid === -1)
+            throw new Error(
+                `Error while calculate proficiency: Can't find meaning in this word ${this.text}.`
+            );
+        return {
+            proficiency: ans,
+            setid: minsid,
+            mid: minid,
+        };
+    }
 }
 
 /** 词义集，包括同词性的多个词义 */
 class WordMeaningSet {
-  /** 词义 */
-  meaning: WordMeaning[];
-  /** 词性 */
-  POS: string;
-  constructor(meaning: WordMeaning[] = [], POS: string = "") {
-    this.meaning = meaning;
-    this.POS = POS;
-  }
+    /** 词义 */
+    meaning: WordMeaning[];
+    /** 词性 */
+    POS: string;
+    constructor(meaning: WordMeaning[] = [], POS: string = '') {
+        this.meaning = meaning;
+        this.POS = POS;
+    }
 }
 
 /** 词义 */
 class WordMeaning {
-  /** 词义 */
-  text: string;
-  /** 以将词义作为已知，要求写出单词这种方式进行复习的信息 */
-  private readonly _reviewInfo: ReviewInfo;
+    /** 词义 */
+    text: string;
+    /** 以将词义作为已知，要求写出单词这种方式进行复习的信息 */
+    private readonly _reviewByWordInfo: ReviewInfo;
+    private readonly _reviewByMeaningInfo: ReviewInfo;
 
-  constructor(text: string) {
-    this.text = text;
-    this._reviewInfo = {
-      firstLearned: new Date(),
-      lastCorrect: null,
-      lastWrong: null,
-      rightReviewCount: 0,
-      wrongReviewCount: 0,
-    };
-  }
-
-  get reviewInfo(): ReviewInfo {
-    return this._reviewInfo;
-  }
-
-  /**
-   * 计算单词熟练度
-   * @returns 熟练度分数（0-100，保留4位小数）
-   */
-  calculateProficiency(): number {
-    return calculateProficiency(
-      this._reviewInfo.firstLearned,
-      this._reviewInfo.lastCorrect,
-      this._reviewInfo.lastWrong,
-      this._reviewInfo.rightReviewCount,
-      this._reviewInfo.wrongReviewCount,
-      new Date(),
-    );
-  }
-  /**
-   * 获得最近一次复习的信息
-   * @returns 复习信息
-   * - data，复习时间，从未复习过则为 null
-   * - res，复习结果，为 true 表示正确，为 false 表示失败
-   */
-  getLastReview(): {
-    date: Date | null;
-    res: boolean;
-  } {
-    let lastReview: Date = new Date(),
-      res;
-    if (this._reviewInfo.lastCorrect === null) {
-      if (this._reviewInfo.lastWrong === null) {
-        return {
-          date: null,
-          res: false,
+    constructor(text: string) {
+        this.text = text;
+        this._reviewByWordInfo = {
+            firstLearned: new Date(),
+            lastCorrect: null,
+            lastWrong: null,
+            rightReviewCount: 0,
+            wrongReviewCount: 0,
         };
-      }
-      lastReview = this._reviewInfo.lastWrong;
-      res = false;
-    } else {
-      if (this._reviewInfo.lastWrong === null) {
-        lastReview = this._reviewInfo.lastCorrect;
-        res = true;
-      } else {
-        res = this._reviewInfo.lastCorrect > this._reviewInfo.lastWrong;
-      }
+        this._reviewByMeaningInfo = {
+            firstLearned: new Date(),
+            lastCorrect: null,
+            lastWrong: null,
+            rightReviewCount: 0,
+            wrongReviewCount: 0,
+        };
     }
-    return {
-      date: lastReview,
-      res,
-    };
-  }
-  /**
-   * 将这个词义作为已知进行复习
-   */
-  review(res: boolean): void {
-    if (res) {
-      this._reviewInfo.lastCorrect = new Date();
-      this._reviewInfo.rightReviewCount++;
-    } else {
-      this._reviewInfo.lastWrong = new Date();
-      this._reviewInfo.wrongReviewCount++;
+
+    get reviewByWordInfo(): ReviewInfo {
+        return this._reviewByWordInfo;
     }
-  }
+
+    get reviewByMeaningInfo(): ReviewInfo {
+        return this._reviewByMeaningInfo;
+    }
+
+    /**
+     * 计算单词熟练度
+     * @returns 熟练度分数（0-100，保留4位小数）
+     */
+    calcProficiency(): number {
+        return Math.min(
+            calcProficiency(this.reviewByMeaningInfo, new Date()),
+            calcProficiency(this.reviewByWordInfo, new Date())
+        );
+    }
+    /**
+     * 获得最近一次复习的信息
+     * @param source 复习的方式
+     * @returns 复习信息
+     * - data，复习时间，从未复习过则为 null
+     * - res，复习结果，为 true 表示正确，为 false 表示失败
+     */
+    getLastReview(source: ReviewMode): {
+        date: Date | null;
+        res: boolean;
+    } {
+        function getLatest(reviewInfo: ReviewInfo) {
+            let lastReview: Date = new Date(),
+                res;
+            if (reviewInfo.lastCorrect === null) {
+                if (reviewInfo.lastWrong === null) {
+                    return {
+                        date: null,
+                        res: false,
+                    };
+                }
+                lastReview = reviewInfo.lastWrong;
+                res = false;
+            } else {
+                if (reviewInfo.lastWrong === null) {
+                    lastReview = reviewInfo.lastCorrect;
+                    res = true;
+                } else {
+                    res = reviewInfo.lastCorrect > reviewInfo.lastWrong;
+                }
+            }
+            return {
+                date: lastReview,
+                res,
+            };
+        }
+
+        if (source === ReviewMode.ByWord) {
+            return getLatest(this.reviewByWordInfo);
+        } else {
+            return getLatest(this.reviewByMeaningInfo);
+        }
+    }
+    /**
+     * 将这个词义作为已知进行复习
+     * @param res 复习的结果
+     * @param source 是如何复习的
+     * - “Word”，给定单词，复习词义
+     * - "Meaning"，给定词义，复习单词
+     */
+    review(res: boolean, source: ReviewMode): void {
+        const ref = source === ReviewMode.ByWord ? this.reviewByWordInfo : this.reviewByMeaningInfo;
+        if (res) {
+            ref.lastCorrect = new Date();
+            ref.rightReviewCount++;
+        } else {
+            ref.lastWrong = new Date();
+            ref.wrongReviewCount++;
+        }
+    }
 }
 
 class Setting {
-  ignoreCase: boolean = false;
+    ignoreCase: boolean = false;
 }
 
 declare global {
-  interface String {
-    toWM(): WordMeaning;
-  }
+    interface String {
+        toWM(): WordMeaning;
+    }
 }
 
 /**
  * 将字符串转化为一个WordMeaning对象
  */
 String.prototype.toWM = function (): WordMeaning {
-  return new WordMeaning(this.toString());
+    return new WordMeaning(this.toString());
 };
 
-export { Word, WordMeaningSet, WordMeaning, Setting };
+export { Word, WordMeaningSet, WordMeaning, Setting, type ReviewInfo, ReviewMode };

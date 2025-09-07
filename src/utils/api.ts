@@ -1,16 +1,16 @@
-import TypeJson from "./TypeJson";
+import TypeJson from './TypeJson';
 
 interface Program {
     /**
      * 获取当前环境
      * @returns release表示打包后，debug表示开发环境
      */
-    ENVMODE: () => "release" | "debug",
+    ENVMODE: () => 'release' | 'debug';
     /**
      * 获取项目根目录
      * @returns 项目根目录
      */
-    ProjectRoot: () => string
+    ProjectRoot: () => string;
 }
 
 interface fs {
@@ -30,13 +30,13 @@ interface fs {
 
 declare global {
     interface Window {
-        Program: Program
-        fs: fs
+        Program: Program;
+        fs: fs;
     }
 }
 
 const API = {
-    getEnvMode(): "release" | "debug" {
+    getEnvMode(): 'release' | 'debug' {
         return window.Program.ENVMODE();
     },
 
@@ -49,12 +49,12 @@ const API = {
     },
 
     setData(key: string, value: string | Object): void {
-        if (typeof value === "object") value = TypeJson.stringify(value);
+        if (typeof value === 'object') value = TypeJson.stringify(value);
         return window.fs.set(key, value as string);
     },
     clearData(): void {
         return window.fs.clear();
     },
-}
+};
 
-export default API
+export default API;

@@ -6,18 +6,23 @@ interface TypedObject {
 type AnyConstructor<T> = new (...args: any[]) => T;
 
 type ConstructorItem<T> = {
-    func: AnyConstructor<T>,
-    param: any[]
-}
+    func: AnyConstructor<T>;
+    param: any[];
+};
 
 /**
  * 带有类型检查的JSON格式化
  */
 class TypeJson {
-    private static typeRegistry = new Map<string, ConstructorItem<any>>([[Date.name, {
-        func: Date,
-        param: []
-    }]]);
+    private static typeRegistry = new Map<string, ConstructorItem<any>>([
+        [
+            Date.name,
+            {
+                func: Date,
+                param: [],
+            },
+        ],
+    ]);
 
     static register<T extends new (...args: any[]) => any>(
         newType: T,
@@ -25,7 +30,7 @@ class TypeJson {
     ): void {
         TypeJson.typeRegistry.set(newType.name, {
             param: param,
-            func: newType
+            func: newType,
         });
     }
 
@@ -46,24 +51,27 @@ class TypeJson {
 
         // 如果是数组，递归处理每个元素
         if (Array.isArray(value)) {
-            return value.map(item => TypeJson.serializeReplacer('', item));
+            return value.map((item) => TypeJson.serializeReplacer('', item));
         }
 
         // 如果是对象且具有构造函数（非常规对象）
-        if (typeof value === 'object' && value.constructor !== Object &&
-            value.constructor.name !== 'Array' && TypeJson.typeRegistry.get(value.constructor.name) !== undefined) {
-
+        if (
+            typeof value === 'object' &&
+            value.constructor !== Object &&
+            value.constructor.name !== 'Array' &&
+            TypeJson.typeRegistry.get(value.constructor.name) !== undefined
+        ) {
             const result: TypedObject = {
-                __type__: value.constructor.name
+                __type__: value.constructor.name,
             };
 
-            if (value.constructor.name === "Date") {
-                result["value"] = (value as Date).toJSON();
-                return result
+            if (value.constructor.name === 'Date') {
+                result['value'] = (value as Date).toJSON();
+                return result;
             }
 
             // 复制所有属性并递归处理
-            Object.keys(value).forEach(prop => {
+            Object.keys(value).forEach((prop) => {
                 result[prop] = TypeJson.serializeReplacer(prop, value[prop]);
             });
 
@@ -73,7 +81,7 @@ class TypeJson {
         // 如果是普通对象，递归处理每个属性
         if (typeof value === 'object') {
             const result: { [key: string]: any } = {};
-            Object.keys(value).forEach(prop => {
+            Object.keys(value).forEach((prop) => {
                 result[prop] = TypeJson.serializeReplacer(prop, value[prop]);
             });
             return result;
@@ -93,7 +101,7 @@ class TypeJson {
         }
 
         if (Array.isArray(obj)) {
-            return obj.map(item => TypeJson.parseReplacer(item)) as any;
+            return obj.map((item) => TypeJson.parseReplacer(item)) as any;
         }
 
         const tp = obj.__type__;
@@ -101,20 +109,17 @@ class TypeJson {
         let result: any;
 
         if (tp !== undefined && TypeJson.typeRegistry.get(tp) !== undefined) {
-            if (obj.__type__ === "Date") {
+            if (obj.__type__ === 'Date') {
                 return new Date(obj.value) as any;
             }
             const item = TypeJson.typeRegistry.get(tp)!;
-            result = new (item.func)!(item.param);
-        }
-        else result = {};
-        Object.keys(obj).forEach(key => {
-            if (key !== "__type__")
-                result[key] = TypeJson.parseReplacer(obj[key]);
+            result = new item.func!(item.param);
+        } else result = {};
+        Object.keys(obj).forEach((key) => {
+            if (key !== '__type__') result[key] = TypeJson.parseReplacer(obj[key]);
         });
         return result;
     }
 }
 
-
-export default TypeJson
+export default TypeJson;

@@ -1,15 +1,14 @@
 // emitter.ts
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
 import { ref, type Ref } from 'vue';
 
 type signalType = {
-    signal1: () => void,
+    signal1: () => void;
     signal2: () => number;
-    signal3: (param1: number, param2: string) => string
-}
+    signal3: (param1: number, param2: string) => string;
+};
 
 export const useEmitter = defineStore('signals', () => {
-
     /**
      * 信号类型接口，定义所有可用信号及其参数和返回值
      */
@@ -44,10 +43,15 @@ export const useEmitter = defineStore('signals', () => {
      * @throws 如果没有注册的监听器则抛出错误
      * @warning 当多个监听器返回值时会打印警告
      */
-    function emit<T extends keyof signalType>(signalName: T, ...param: Parameters<signalType[T]>): ReturnType<signalType[T]> {
+    function emit<T extends keyof signalType>(
+        signalName: T,
+        ...param: Parameters<signalType[T]>
+    ): ReturnType<signalType[T]> {
         let ansList = emitAll(signalName, ...param);
         if (ansList.length >= 2) {
-            console.warn(`⚠️ 多个监听器返回了值，建议使用emitAll获取所有返回值。信号：${signalName}`);
+            console.warn(
+                `⚠️ 多个监听器返回了值，建议使用emitAll获取所有返回值。信号：${signalName}`
+            );
         }
         return ansList[0];
     }
@@ -59,13 +63,16 @@ export const useEmitter = defineStore('signals', () => {
      * @returns 所有监听器返回值的数组（过滤undefined）
      * @throws 如果没有注册的监听器则抛出错误
      */
-    function emitAll<T extends keyof signalType>(signalName: T, ...param: Parameters<signalType[T]>): ReturnType<signalType[T]>[] {
+    function emitAll<T extends keyof signalType>(
+        signalName: T,
+        ...param: Parameters<signalType[T]>
+    ): ReturnType<signalType[T]>[] {
         let ansList: ReturnType<signalType[T]>[] = [];
         let hasRun = false;
 
         signalMap.value.get(signalName)?.forEach((v) => {
             hasRun = true;
-            const returns = ((v as unknown) as Function)(...param);
+            const returns = (v as unknown as Function)(...param);
             if (returns !== undefined) ansList.push(returns);
         });
 
@@ -74,4 +81,4 @@ export const useEmitter = defineStore('signals', () => {
     }
 
     return { on, off, emit, emitAll, signalMap };
-})
+});

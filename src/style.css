@@ -15,7 +15,7 @@
     flex-direction: row;
 }
 
-.cflex {
+.c-flex {
     display: flex;
     flex-direction: column;
 }
@@ -24,10 +24,14 @@
     flex-grow: 1;
 }
 
-.wfull {
+.w-full {
     width: 100%;
 }
 
-.hfull {
+.h-full {
     height: 100%;
+}
+
+.block{
+    display: block;
 }

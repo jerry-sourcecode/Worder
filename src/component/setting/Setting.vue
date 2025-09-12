@@ -2,14 +2,25 @@
     <div style="padding: 25px">
         <el-form label-width="auto" @submit.prevent>
             <el-tabs model-value="check">
-                <el-tab-pane label="复习校验" name="check">
-                    <el-form-item label="忽略大小写" style="margin-bottom: 0">
+                <el-tab-pane label="复习" name="check">
+                    <el-form-item label="检查时忽略大小写">
                         <el-switch
                             v-model="dataStore.setting.ignoreCase"
                             active-color="#13ce66"
                             active-text="开启"
                             inactive-color="#ff4949"
                             inactive-text="关闭"
+                        />
+                    </el-form-item>
+                    <el-form-item label="复习形式">
+                        <el-checkbox
+                            v-model="dataStore.setting.reviewContent.byWord"
+                            label="翻译题：给定单词，要求写出其词义。"
+                            style="width: 100%"
+                        />
+                        <el-checkbox
+                            v-model="dataStore.setting.reviewContent.byMeaning"
+                            label="翻译题：给定词义，要求写出对应单词。"
                         />
                     </el-form-item>
                 </el-tab-pane>

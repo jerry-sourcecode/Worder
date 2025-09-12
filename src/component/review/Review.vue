@@ -3,7 +3,7 @@
         <el-splitter v-if="state !== `NoData`" layout="vertical">
             <el-splitter-panel :resizable="false" size="40%">
                 <div class="flex panel" style="height: 100%">
-                    <div class="cflex">
+                    <div class="c-flex">
                         <div style="margin-left: auto; margin-right: auto">
                             <em v-if="curProblem!.POS !== `unknown`" style="margin-right: 15px">
                                 {{ curProblem!.POS + '.' }}
@@ -25,7 +25,7 @@
                 </div>
             </el-splitter-panel>
             <el-splitter-panel size="50%">
-                <div class="cflex" style="height: 100%">
+                <div class="c-flex" style="height: 100%">
                     <Inputer
                         v-model:value="transText"
                         :class="
@@ -159,6 +159,8 @@ function getCurrentWord(): Word | undefined {
     let minWordId = -1,
         minWord: Word | null = null,
         minMode: ReviewMode = ReviewMode.ByWord;
+    let reviewContent = dataStore.setting.reviewContent;
+    if (!reviewContent.byWord && !reviewContent.byMeaning) return undefined;
     /**
      * 获取单词a的优先级
      */
@@ -230,6 +232,8 @@ function getCurrentWord(): Word | undefined {
                 mode = ReviewMode.ByMeaning;
             }
         }
+        if (!reviewContent.byWord) mode = ReviewMode.ByMeaning;
+        if (!reviewContent.byMeaning) mode = ReviewMode.ByWord;
 
         if (getWordPriority(v, mode))
             if (

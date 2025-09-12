@@ -2,7 +2,7 @@
     <div style="padding: 25px">
         <el-form :model="form" label-width="auto" style="margin: 5px" @submit.prevent>
             <el-form-item label="新单词：">
-                <div class="flex wfull">
+                <div class="flex w-full">
                     <el-input v-model="form.text" class="flex-grow" @input="isWordRef = false">
                     </el-input>
                     <el-button

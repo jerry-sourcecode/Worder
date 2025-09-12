@@ -1,12 +1,10 @@
-import {app, BrowserWindow, ipcMain} from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
-import {fileURLToPath} from 'node:url';
 import Store from 'electron-store';
 
 const store = new Store();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const ROOT = app.getAppPath();
 
 const MOD: 'debug' | 'release' = 'debug';
 
@@ -16,13 +14,13 @@ function createWindow() {
         height: 600,
         autoHideMenuBar: true,
         webPreferences: {
-            preload: path.resolve(__dirname, './preload.mjs'),
+            preload: path.resolve(ROOT, './dist-electron/preload.mjs'),
         },
     });
     if (MOD == 'debug') {
         win.loadURL('http://localhost:5173');
     } else {
-        win.loadFile(path.resolve(__dirname, '../dist/index.html'));
+        win.loadFile(path.resolve(ROOT, './dist/index.html'));
     }
 }
 
@@ -42,7 +40,7 @@ ipcMain.on('ENVMODE', (e) => {
 });
 
 ipcMain.on('ProjectRoot', (e) => {
-    e.returnValue = path.resolve(__dirname, '../');
+    e.returnValue = ROOT;
 });
 
 ipcMain.on('get', (e, key) => {

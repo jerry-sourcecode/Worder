@@ -304,6 +304,13 @@ class WordMeaning {
 
 class Setting {
     ignoreCase: boolean = false;
+    reviewContent: {
+        byWord: boolean;
+        byMeaning: boolean;
+    } = {
+        byWord: true,
+        byMeaning: true,
+    };
 }
 
 declare global {

@@ -36,24 +36,17 @@ declare global {
 }
 
 const API = {
-    getEnvMode(): 'release' | 'debug' {
-        return window.Program.ENVMODE();
-    },
-
-    getProjectRoot(): string {
-        return window.Program.ProjectRoot();
-    },
-
-    getData(key?: string): string {
-        return window.fs.get(key);
+    getData(key?: string): string | null {
+        if (!key) throw 'GET: Key is Empty!';
+        return localStorage.getItem(key);
     },
 
     setData(key: string, value: string | Object): void {
         if (typeof value === 'object') value = TypeJson.stringify(value);
-        return window.fs.set(key, value as string);
+        return localStorage.setItem(key, value as string);
     },
     clearData(): void {
-        return window.fs.clear();
+        return localStorage.clear();
     },
 };
 

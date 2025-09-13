@@ -1,6 +1,6 @@
-import {defineStore} from 'pinia';
-import {Setting, Word, type WordMeaning, WordMeaningSet} from './modal.ts';
-import {computed, ref, type Ref, watch} from 'vue';
+import { defineStore } from 'pinia';
+import { Setting, Word, type WordMeaning, WordMeaningSet } from './modal.ts';
+import { computed, ref, type Ref, watch } from 'vue';
 import API from '@/utils/api.ts';
 import TypeJson from '@/utils/TypeJson.ts';
 
@@ -191,10 +191,11 @@ export const useData = defineStore('data', () => {
      * 从本地加载数据
      */
     function init() {
-        if (API.getData('words')) words.value = TypeJson.parse<Word[]>(API.getData('words'));
-        if (API.getData('nullList')) nullList = TypeJson.parse<number[]>(API.getData('nullList'));
-        if (API.getData('POS')) POS.value = TypeJson.parse<string[]>(API.getData('POS'));
-        if (API.getData('setting')) setting.value = TypeJson.parse<Setting>(API.getData('setting'));
+        if (API.getData('words')) words.value = TypeJson.parse<Word[]>(API.getData('words')!);
+        if (API.getData('nullList')) nullList = TypeJson.parse<number[]>(API.getData('nullList')!);
+        if (API.getData('POS')) POS.value = TypeJson.parse<string[]>(API.getData('POS')!);
+        if (API.getData('setting'))
+            setting.value = TypeJson.parse<Setting>(API.getData('setting')!);
     }
 
     return {

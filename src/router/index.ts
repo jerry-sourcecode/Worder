@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createMemoryHistory, createRouter } from 'vue-router';
 
 import WordBook from '@/component/wordbook/WordBook.vue';
 import Setting from '@/component/setting/Setting.vue';
@@ -6,7 +6,7 @@ import Study from '@/component/study/Study.vue';
 import Review from '@/component/review/Review.vue';
 
 const router = createRouter({
-    history: createWebHashHistory(),
+    history: createMemoryHistory(),
     routes: [
         {
             path: '/',

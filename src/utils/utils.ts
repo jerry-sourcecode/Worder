@@ -1,12 +1,4 @@
-import API from '@/utils/api';
 import type { ReviewInfo } from '@/data/modal.ts';
-
-function toFullSrc(filename: string): string {
-    if (API.getEnvMode() == 'release')
-        return new URL(`file://${(API.getProjectRoot() + '/dist' + filename).replace(/\\/g, '/')}`)
-            .href;
-    return filename;
-}
 
 /**
  * 计算单词的“熟记强度”（非负实数）
@@ -184,4 +176,4 @@ String.prototype.else = function (value: string): string {
     return value;
 };
 
-export { toFullSrc, calcProficiency, calcTimeDiffLevel };
+export { calcProficiency, calcTimeDiffLevel };

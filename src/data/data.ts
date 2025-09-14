@@ -42,24 +42,32 @@ export const useData = defineStore('data', () => {
      * 添加单词
      * @param word 单词文本
      * @param meanings 词义列表
+     * @param also 同时写作什么
      * @param mode 添加单词的模式
      */
-    function addWord(word: string, meanings: WordMeaningSet[], mode?: AWM): void;
-    function addWord(word: string, meanings: WordMeaning[][], mode?: AWM): void;
+    function addWord(word: string, meanings: WordMeaningSet[], also?: string[], mode?: AWM): void;
+    function addWord(word: string, meanings: WordMeaning[][], also?: string[], mode?: AWM): void;
     function addWord(
         word: string,
         meanings: (WordMeaningSet | WordMeaning[])[],
+        also: string[] = [],
         mode: AWM = AWM.append
     ): void {
-        const wd = new Word(words.value.length, word, meanings);
+        const wd = new Word(words.value.length, word, meanings, also);
         let hasChanged = false;
         words.value.forEach((v, id) => {
             if (v === null) return;
             if (v.text === word) {
-                if (mode === AWM.truct) words.value[id]!.clearMeaning();
+                if (mode === AWM.truct) {
+                    words.value[id]!.clearMeaning();
+                    words.value[id]!.synForm = [];
+                }
                 wd.meaningSet.forEach((m) => {
                     words.value[id]!.addMeaning(m);
                 });
+                wd.synForm.forEach((f) => {
+                    words.value[id]?.addSynForm(f);
+                })
                 hasChanged = true;
                 return;
             }
@@ -68,7 +76,7 @@ export const useData = defineStore('data', () => {
         if (nullList.length == 0) {
             words.value.push(wd);
         } else {
-            words.value[nullList[0]] = new Word(nullList[0], word, meanings);
+            words.value[nullList[0]] = new Word(nullList[0], word, meanings, also);
             nullList.shift();
         }
     }

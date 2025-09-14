@@ -1,7 +1,18 @@
 <template>
     <div style="padding: 25px">
         <el-form label-width="auto" @submit.prevent>
-            <el-tabs model-value="check">
+            <el-tabs model-value="study">
+                <el-tab-pane label="学习" name="study">
+                    <el-form-item label="自动在单词本中搜索">
+                        <el-switch
+                            v-model="dataStore.setting.autoSearchInWordBook"
+                            active-color="#13ce66"
+                            active-text="开启"
+                            inactive-color="#ff4949"
+                            inactive-text="关闭"
+                        />
+                    </el-form-item>
+                </el-tab-pane>
                 <el-tab-pane label="复习" name="check">
                     <el-form-item label="检查时忽略大小写">
                         <el-switch
@@ -75,7 +86,7 @@
 import { useData } from '@/data/data.ts';
 import { ref, type Ref } from 'vue';
 import { ElForm, ElTabs } from 'element-plus';
-import Input from './InputLabel.vue';
+import Input from '../InputLabel.vue';
 import { DeleteFilled } from '@element-plus/icons-vue';
 
 const dataStore = useData();

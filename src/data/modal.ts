@@ -25,15 +25,23 @@ type ReviewMode = (typeof ReviewMode)[keyof typeof ReviewMode];
 class Word {
     /** 单词文本 */
     text: string;
+    /** 同义形式 */
+    synForm: string[];
     /** 词义 */
     private _meaning: WordMeaningSet[];
     /** 单词的唯一标识 */
     private readonly _id: number;
 
-    constructor(id: number, text: string, meaning: (WordMeaningSet | WordMeaning[])[] = []) {
+    constructor(
+        id: number,
+        text: string,
+        meaning: (WordMeaningSet | WordMeaning[])[] = [],
+        synForm: string[] = []
+    ) {
         this.text = text;
         this._id = id;
         this._meaning = [];
+        this.synForm = synForm;
         meaning.forEach((item) => {
             if (Array.isArray(item)) {
                 this.addMeaning(item);
@@ -51,6 +59,13 @@ class Word {
     /** 单词的唯一标识 */
     get id(): number {
         return this._id;
+    }
+
+    addSynForm(synForm: string) {
+        this.synForm.push(synForm);
+    }
+    rmSynForm(id: number) {
+        this.synForm.splice(id, 1);
     }
 
     /**
@@ -304,6 +319,7 @@ class WordMeaning {
 
 class Setting {
     ignoreCase: boolean = false;
+    autoSearchInWordBook: boolean = false;
     reviewContent: {
         byWord: boolean;
         byMeaning: boolean;

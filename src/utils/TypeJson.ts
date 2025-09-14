@@ -120,6 +120,9 @@ class TypeJson {
         });
         return result;
     }
+    static copy<T>(obj: T): T {
+        return TypeJson.parse(TypeJson.stringify(obj));
+    }
 }
 
 export default TypeJson;

@@ -289,7 +289,7 @@ function checkTranslation() {
         userAnswer = userAnswer.toLowerCase();
         correct = correct?.toLowerCase();
     }
-    if (userAnswer === correct) {
+    if (userAnswer === correct || isCorrectForSynForm()) {
         if (errCount.value === 0) wm.review(true, curMode.value); // 只在首次作答时记录
         errCount.value = 0;
         state.value = 'Correct';
@@ -297,6 +297,16 @@ function checkTranslation() {
         if (errCount.value === 0) wm.review(false, curMode.value); // 只在首次作答时记录
         errCount.value++;
         state.value = 'Wrong';
+    }
+    function isCorrectForSynForm() {
+        if (curMode.value === ReviewMode.ByMeaning) {
+            let istrue = false;
+            currentWord.value?.synForm.forEach((f) => {
+                if (f === userAnswer) istrue = true;
+            });
+            if (istrue) return true;
+        }
+        return false;
     }
 }
 

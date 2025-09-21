@@ -1,9 +1,12 @@
 <template>
     <div style="padding: 25px">
-        <el-form label-width="auto" @submit.prevent>
-            <el-tabs model-value="study">
+        <el-form @submit.prevent>
+            <el-tabs model-value="user">
+                <el-tab-pane label="用户" name="user">
+                    <el-button type="danger" @click="onClearDataBtnClick">删除所有数据</el-button>
+                </el-tab-pane>
                 <el-tab-pane label="学习" name="study">
-                    <el-form-item label="自动在单词本中搜索">
+                    <el-form-item label="当新单词输入框失焦或按下空格键时，自动在单词本中搜索">
                         <el-switch
                             v-model="dataStore.setting.autoSearchInWordBook"
                             active-color="#13ce66"
@@ -77,6 +80,41 @@
                         </div>
                     </el-form-item>
                 </el-tab-pane>
+                <el-tab-pane label="AI" name="AI">
+                    <p class="desc">
+                        允许使用<a href="https://openrouter.ai/" target="_blank">OpenRouter</a
+                        >作为提供智能模型的 API 平台。
+                    </p>
+                    <el-form-item label="启用AI">
+                        <el-switch
+                            v-model="dataStore.setting.AISetting.useAi"
+                            active-color="#13ce66"
+                            active-text="开启"
+                            inactive-color="#ff4949"
+                            inactive-text="关闭"
+                        />
+                    </el-form-item>
+                    <el-form-item label="API密钥">
+                        <el-input
+                            v-model="dataStore.setting.AISetting.apiKey"
+                            :disabled="!dataStore.setting.AISetting.useAi"
+                        />
+                    </el-form-item>
+                    <el-form-item label="模型">
+                        <el-input
+                            v-model="dataStore.setting.AISetting.modal"
+                            :disabled="!dataStore.setting.AISetting.useAi"
+                        />
+                    </el-form-item>
+                    <el-form-item label="AI翻译">
+                        <el-form-item label="目标语言">
+                            <el-input
+                                v-model="dataStore.setting.AISetting.lang"
+                                :disabled="!dataStore.setting.AISetting.useAi"
+                            />
+                        </el-form-item>
+                    </el-form-item>
+                </el-tab-pane>
             </el-tabs>
         </el-form>
     </div>
@@ -88,6 +126,7 @@ import { ref, type Ref } from 'vue';
 import { ElForm, ElTabs } from 'element-plus';
 import Input from '../InputLabel.vue';
 import { DeleteFilled } from '@element-plus/icons-vue';
+import API from '@/utils/api.ts';
 
 const dataStore = useData();
 
@@ -105,6 +144,11 @@ function handleInputDone(value: string) {
     isEditingPOS.value = false;
     if (value === '') return;
     dataStore.POS.push(value);
+}
+
+function onClearDataBtnClick() {
+    API.clearData();
+    location.reload();
 }
 </script>
 
@@ -179,5 +223,9 @@ function handleInputDone(value: string) {
 
 .item-checkable:active {
     animation: itemCheckableClick 0.3s;
+}
+
+p.desc {
+    margin: 10px 10px 10px 0;
 }
 </style>

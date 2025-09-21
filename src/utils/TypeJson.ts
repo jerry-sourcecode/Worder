@@ -120,6 +120,11 @@ class TypeJson {
         });
         return result;
     }
+
+    /**
+     * 清除引用的深拷贝
+     * @param obj 原本
+     */
     static copy<T>(obj: T): T {
         return TypeJson.parse(TypeJson.stringify(obj));
     }

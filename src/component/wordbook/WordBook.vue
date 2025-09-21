@@ -16,7 +16,7 @@
                 </div>
                 <div v-if="item?.synForm.length != 0">
                     同时写作：
-                    <span v-for="form in item?.synForm">{{ form }}；</span>
+                    <span v-for="form in item?.synForm">{{ form.word }}；</span>
                 </div>
             </div>
             <el-tooltip content="删除" effect="dark" placement="left">

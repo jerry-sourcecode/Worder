@@ -22,11 +22,22 @@ const ReviewMode = {
 } as const;
 type ReviewMode = (typeof ReviewMode)[keyof typeof ReviewMode];
 
+// 词义添加的来源
+const SourceStatus = {
+    /** 普通来源，可能是用户输入 */
+    Simple: 0,
+    /** 通过AI翻译添加的*/
+    AI: 2,
+    /** 通过在单词本里搜索添加的 */
+    WordBook: 3,
+} as const;
+type SourceStatus = (typeof SourceStatus)[keyof typeof SourceStatus];
+
 class Word {
     /** 单词文本 */
     text: string;
     /** 同义形式 */
-    synForm: string[];
+    synForm: SynForm[];
     /** 词义 */
     private _meaning: WordMeaningSet[];
     /** 单词的唯一标识 */
@@ -41,7 +52,7 @@ class Word {
         this.text = text;
         this._id = id;
         this._meaning = [];
-        this.synForm = synForm;
+        this.synForm = synForm.map((v) => new SynForm(v));
         meaning.forEach((item) => {
             if (Array.isArray(item)) {
                 this.addMeaning(item);
@@ -61,8 +72,8 @@ class Word {
         return this._id;
     }
 
-    addSynForm(synForm: string) {
-        this.synForm.push(synForm);
+    addSynForm(synForm: string, source: SourceStatus = SourceStatus.Simple) {
+        this.synForm.push(new SynForm(synForm, source));
     }
     rmSynForm(id: number) {
         this.synForm.splice(id, 1);
@@ -199,6 +210,16 @@ class Word {
     }
 }
 
+class SynForm {
+    word: string;
+    source: SourceStatus = SourceStatus.Simple;
+
+    constructor(word: string, source: SourceStatus = SourceStatus.Simple) {
+        this.word = word;
+        this.source = source;
+    }
+}
+
 /** 词义集，包括同词性的多个词义 */
 class WordMeaningSet {
     /** 词义 */
@@ -215,8 +236,11 @@ class WordMeaningSet {
 class WordMeaning {
     /** 词义 */
     text: string;
-    /** 以将词义作为已知，要求写出单词这种方式进行复习的信息 */
+    /** 来源 */
+    source: SourceStatus = SourceStatus.Simple;
+    /** 以将单词作为已知，要求写出词义这种方式进行复习的信息 */
     private readonly _reviewByWordInfo: ReviewInfo;
+    /** 以将词义作为已知，要求写出单词这种方式进行复习的信息 */
     private readonly _reviewByMeaningInfo: ReviewInfo;
 
     constructor(text: string) {
@@ -320,6 +344,18 @@ class WordMeaning {
 class Setting {
     ignoreCase: boolean = false;
     autoSearchInWordBook: boolean = false;
+    useAI: boolean = false;
+    AISetting: {
+        useAi: boolean;
+        modal: string;
+        apiKey: string;
+        lang: string;
+    } = {
+        useAi: false,
+        modal: '',
+        apiKey: '',
+        lang: '',
+    };
     reviewContent: {
         byWord: boolean;
         byMeaning: boolean;
@@ -342,4 +378,13 @@ String.prototype.toWM = function (): WordMeaning {
     return new WordMeaning(this.toString());
 };
 
-export { Word, WordMeaningSet, WordMeaning, Setting, type ReviewInfo, ReviewMode };
+export {
+    Word,
+    WordMeaningSet,
+    WordMeaning,
+    Setting,
+    type ReviewInfo,
+    ReviewMode,
+    SourceStatus,
+    SynForm,
+};

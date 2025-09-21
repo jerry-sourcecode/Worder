@@ -160,6 +160,19 @@ declare global {
          * .else("a>=2") // 否则返回 "a>=2"
          */
         else(value: string): string;
+
+        /**
+         * 判断是否是一个字符串
+         * @param str 被判断的字符串
+         */
+        is(str: string): boolean;
+    }
+    interface Number {
+        /**
+         * 判断数值是否相等
+         * @param int 被比较的数值
+         */
+        is(int: number): boolean;
     }
 }
 String.prototype.if = function (condition: boolean): string {
@@ -175,5 +188,71 @@ String.prototype.else = function (value: string): string {
     if (this !== '') return this.toString();
     return value;
 };
+String.prototype.is = function (str: string): boolean {
+    return this.toString() === str;
+};
 
-export { calcProficiency, calcTimeDiffLevel };
+Number.prototype.is = function (int: number): boolean {
+    return this === int;
+};
+
+async function callOpenRouter(apiKey: string, model: string, message: string): Promise<string> {
+    return new Promise(async (res, rej) => {
+        if (apiKey == "" || model == "" || message == ""){
+            rej(`Missing Information。`)
+            return;
+        }
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'HTTP-Referer': 'http://localhost:8088',
+                    'X-Title': 'OpenRouter API Test'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {
+                            role: 'user',
+                            content: message
+                        }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                rej(`HTTP error! status: ${response.status}`)
+                return;
+            }
+
+            const data = await response.json();
+
+            res(data.choices[0].message.content);
+
+        } catch (error: any) {
+            rej(`Error: ${error.message}`)
+            return;
+        }
+    })
+}
+
+async function translate(apiKey: string, model: string, word: string, to: string){
+    return callOpenRouter(apiKey, model, `
+    You need to be a translator and help me translate words.
+    Input: ${word}, this is the word you need to translate, you need to translate this word to ${to}.
+    Output: Only one string per line, in JSON format, its format is as follows:
+    [
+        {
+            pos: string; // part of speech, such as n/v/adj, no dot
+            meanings: string[]; // word meanings
+        },
+        // ...
+    ]
+    Please do not select all word meanings, but only the most common word meanings.
+    In particular, if no meaning is found, the above content will be invalidated, and a string will be output instead: Not Found
+    `);
+}
+
+export { calcProficiency, calcTimeDiffLevel, translate };

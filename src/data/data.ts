@@ -66,7 +66,7 @@ export const useData = defineStore('data', () => {
                     words.value[id]!.addMeaning(m);
                 });
                 wd.synForm.forEach((f) => {
-                    words.value[id]?.addSynForm(f);
+                    words.value[id]?.addSynForm(f.word);
                 })
                 hasChanged = true;
                 return;

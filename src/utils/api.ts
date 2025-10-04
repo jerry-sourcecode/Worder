@@ -1,4 +1,4 @@
-import TypeJson from './TypeJson';
+import { TypeJson } from './TypeJson';
 
 const API = {
     getData(key?: string): string | null {

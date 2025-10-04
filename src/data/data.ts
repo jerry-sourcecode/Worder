@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { Setting, Word, type WordMeaning, WordMeaningSet } from './modal.ts';
 import { computed, ref, type Ref, watch } from 'vue';
 import API from '@/utils/api.ts';
-import TypeJson from '@/utils/TypeJson.ts';
+import { TypeJson } from '@/utils/TypeJson.ts';
 
 /**
  * Add Word Mode，添加单词模式
@@ -217,5 +217,6 @@ export const useData = defineStore('data', () => {
         AWM,
         setting,
         words,
+        nullList
     };
 });

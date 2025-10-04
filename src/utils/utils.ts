@@ -198,8 +198,8 @@ Number.prototype.is = function (int: number): boolean {
 
 async function callOpenRouter(apiKey: string, model: string, message: string): Promise<string> {
     return new Promise(async (res, rej) => {
-        if (apiKey == "" || model == "" || message == ""){
-            rej(`Missing Information。`)
+        if (apiKey == '' || model == '' || message == '') {
+            rej(`Missing Information。`);
             return;
         }
         try {
@@ -207,39 +207,41 @@ async function callOpenRouter(apiKey: string, model: string, message: string): P
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
+                    Authorization: `Bearer ${apiKey}`,
                     'HTTP-Referer': 'http://localhost:8088',
-                    'X-Title': 'OpenRouter API Test'
+                    'X-Title': 'OpenRouter API Test',
                 },
                 body: JSON.stringify({
                     model: model,
                     messages: [
                         {
                             role: 'user',
-                            content: message
-                        }
-                    ]
-                })
+                            content: message,
+                        },
+                    ],
+                }),
             });
 
             if (!response.ok) {
-                rej(`HTTP error! status: ${response.status}`)
+                rej(`HTTP error! status: ${response.status}`);
                 return;
             }
 
             const data = await response.json();
 
             res(data.choices[0].message.content);
-
         } catch (error: any) {
-            rej(`Error: ${error.message}`)
+            rej(`Error: ${error.message}`);
             return;
         }
-    })
+    });
 }
 
-async function translate(apiKey: string, model: string, word: string, to: string){
-    return callOpenRouter(apiKey, model, `
+async function translate(apiKey: string, model: string, word: string, to: string) {
+    return callOpenRouter(
+        apiKey,
+        model,
+        `
     You need to be a translator and help me translate words.
     Input: ${word}, this is the word you need to translate, you need to translate this word to ${to}.
     Output: Only one string per line, in JSON format, its format is as follows:
@@ -252,7 +254,32 @@ async function translate(apiKey: string, model: string, word: string, to: string
     ]
     Please do not select all word meanings, but only the most common word meanings.
     In particular, if no meaning is found, the above content will be invalidated, and a string will be output instead: Not Found
-    `);
+    `
+    );
 }
 
-export { calcProficiency, calcTimeDiffLevel, translate };
+class Queue<T> {
+    private items: T[] = [];
+    // 入队：添加元素到队列尾部
+    push(element: T): void {
+        this.items.push(element);
+    }
+    // 出队：移除并返回队列头部元素
+    pop(): T | undefined {
+        return this.items.shift();
+    }
+    // 查看队首元素
+    front(): T | undefined {
+        return this.items[0];
+    }
+    // 判断队列是否为空
+    empty(): boolean {
+        return this.items.length === 0;
+    }
+    // 获取队列大小
+    size(): number {
+        return this.items.length;
+    }
+}
+
+export { calcProficiency, calcTimeDiffLevel, translate, Queue };

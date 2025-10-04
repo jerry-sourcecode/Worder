@@ -1,11 +1,22 @@
 // emitter.ts
 import { defineStore } from 'pinia';
 import { ref, type Ref } from 'vue';
+import type { BtnType, DialogMsgOptionType } from '@/type';
 
 type signalType = {
-    signal1: () => void;
-    signal2: () => number;
-    signal3: (param1: number, param2: string) => string;
+    /**
+     * 展示一个对话框
+     * @param title 对话框标题
+     * @param msg 对话框信息，支持HTML
+     * @param btnList 按钮列表
+     * @return 一个 Promise，当用户按下按钮时兑现并返回按钮对应的id值，当用户按下关闭时拒绝。
+     */
+    dialog: (
+        title: string,
+        msg: string,
+        btnList: BtnType[],
+        option?: DialogMsgOptionType
+    ) => Promise<string>;
 };
 
 export const useEmitter = defineStore('signals', () => {
@@ -49,7 +60,7 @@ export const useEmitter = defineStore('signals', () => {
     ): ReturnType<signalType[T]> {
         let ansList = emitAll(signalName, ...param);
         if (ansList.length >= 2) {
-            console.warn(
+            console.log(
                 `⚠️ 多个监听器返回了值，建议使用emitAll获取所有返回值。信号：${signalName}`
             );
         }
@@ -76,7 +87,7 @@ export const useEmitter = defineStore('signals', () => {
             if (returns !== undefined) ansList.push(returns);
         });
 
-        if (!hasRun) throw Error(`🚨 未找到信号处理器: ${signalName}`);
+        if (!hasRun) console.log(`🚨 未找到信号处理器: ${signalName}`);
         return ansList;
     }
 

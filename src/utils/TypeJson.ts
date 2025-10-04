@@ -1,5 +1,13 @@
+const propertyMetadata = new Map<any, Map<string, PropertyMetadata>>();
+
+interface PropertyMetadata {
+    ignore?: boolean;
+    synonym?: string;
+}
+
+
 interface TypedObject {
-    __type__: string;
+    _TP_: string;
     [key: string]: any;
 }
 
@@ -9,6 +17,37 @@ type ConstructorItem<T> = {
     func: AnyConstructor<T>;
     param: any[];
 };
+
+// Vue 兼容的装饰器工厂函数
+function TypeJsonIgnore(): PropertyDecorator {
+    return function(target: any, propertyKey: string | symbol) {
+        const constructor = target.constructor;
+        if (!propertyMetadata.has(constructor)) {
+            propertyMetadata.set(constructor, new Map());
+        }
+
+        const classMetadata = propertyMetadata.get(constructor)!;
+        classMetadata.set(propertyKey as string, {
+            ...classMetadata.get(propertyKey as string),
+            ignore: true
+        });
+    };
+}
+
+function TypeJsonSynonym(alias: string): PropertyDecorator {
+    return function(target: any, propertyKey: string | symbol) {
+        const constructor = target.constructor;
+        if (!propertyMetadata.has(constructor)) {
+            propertyMetadata.set(constructor, new Map());
+        }
+
+        const classMetadata = propertyMetadata.get(constructor)!;
+        classMetadata.set(propertyKey as string, {
+            ...classMetadata.get(propertyKey as string),
+            synonym: alias
+        });
+    };
+}
 
 /**
  * 带有类型检查的JSON格式化
@@ -62,7 +101,7 @@ class TypeJson {
             TypeJson.typeRegistry.get(value.constructor.name) !== undefined
         ) {
             const result: TypedObject = {
-                __type__: value.constructor.name,
+                _TP_: value.constructor.name,
             };
 
             if (value.constructor.name === 'Date') {
@@ -70,9 +109,22 @@ class TypeJson {
                 return result;
             }
 
+            // 获取类的属性元数据
+            const classMetadata = propertyMetadata.get(value.constructor);
+
             // 复制所有属性并递归处理
             Object.keys(value).forEach((prop) => {
-                result[prop] = TypeJson.serializeReplacer(prop, value[prop]);
+                // 检查属性元数据
+                const propMetadata = classMetadata?.get(prop);
+
+                // 如果被忽略，跳过
+                if (propMetadata?.ignore) {
+                    return;
+                }
+
+                // 使用别名或原属性名
+                const serializedKey = propMetadata?.synonym || prop;
+                result[serializedKey] = TypeJson.serializeReplacer(prop, value[prop]);
             });
 
             return result;
@@ -104,20 +156,48 @@ class TypeJson {
             return obj.map((item) => TypeJson.parseReplacer(item)) as any;
         }
 
-        const tp = obj.__type__;
+        const tp = obj._TP_;
 
         let result: any;
 
         if (tp !== undefined && TypeJson.typeRegistry.get(tp) !== undefined) {
-            if (obj.__type__ === 'Date') {
+            if (obj._TP_ === 'Date') {
                 return new Date(obj.value) as any;
             }
             const item = TypeJson.typeRegistry.get(tp)!;
             result = new item.func!(item.param);
-        } else result = {};
-        Object.keys(obj).forEach((key) => {
-            if (key !== '__type__') result[key] = TypeJson.parseReplacer(obj[key]);
-        });
+
+            // 获取类的属性元数据
+            const classMetadata = propertyMetadata.get(item.func);
+
+            // 处理所有属性，支持别名反向映射
+            Object.keys(obj).forEach((key) => {
+                if (key !== '_TP_') {
+                    let targetProperty = key;
+
+                    // 查找是否有属性使用了这个别名
+                    if (classMetadata) {
+                        for (const [propName, metadata] of classMetadata.entries()) {
+                            if (metadata.synonym === key) {
+                                targetProperty = propName;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 如果这个属性没有被忽略，则赋值
+                    const propMetadata = classMetadata?.get(targetProperty);
+                    if (!propMetadata?.ignore) {
+                        result[targetProperty] = TypeJson.parseReplacer(obj[key]);
+                    }
+                }
+            });
+        } else {
+            result = {};
+            Object.keys(obj).forEach((key) => {
+                result[key] = TypeJson.parseReplacer(obj[key]);
+            });
+        }
         return result;
     }
 
@@ -130,4 +210,4 @@ class TypeJson {
     }
 }
 
-export default TypeJson;
+export { TypeJson, TypeJsonSynonym, TypeJsonIgnore };

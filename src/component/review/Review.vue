@@ -1,8 +1,8 @@
 <template>
-    <div style="height: 100vh">
+    <div style="display: flex; height: 100%">
         <el-splitter v-if="state !== `NoData`" layout="vertical">
             <el-splitter-panel :resizable="false" size="40%">
-                <div class="flex panel" style="height: 100%">
+                <div class="flex panel h-full">
                     <div class="c-flex">
                         <div style="margin-left: auto; margin-right: auto">
                             <em v-if="curProblem!.POS !== `unknown`" style="margin-right: 15px">
@@ -302,7 +302,7 @@ function checkTranslation() {
         if (curMode.value === ReviewMode.ByMeaning) {
             let istrue = false;
             currentWord.value?.synForm.forEach((f) => {
-                if (f === userAnswer) istrue = true;
+                if (f.word === userAnswer) istrue = true;
             });
             if (istrue) return true;
         }
@@ -340,7 +340,6 @@ function rfNewWord() {
     align-items: center;
     justify-content: center;
     font-size: 40px;
-    flex: 1;
 }
 
 .correct-tip,

@@ -149,12 +149,20 @@
 <script setup lang="ts">
 import { nextTick, ref, type Ref } from 'vue';
 import { useData } from '@/data/data';
-import { ElButton, ElForm, ElIcon, ElInput, ElMessage, ElNotification, ElSelect, } from 'element-plus';
+import {
+    ElButton,
+    ElForm,
+    ElIcon,
+    ElInput,
+    ElMessage,
+    ElNotification,
+    ElSelect,
+} from 'element-plus';
 import { SourceStatus, Word, WordMeaning, WordMeaningSet } from '@/data/modal';
 import { DeleteFilled } from '@element-plus/icons-vue';
 import InputLabel from '@/component/InputLabel.vue';
 import Input from '@/component/InputLabel.vue';
-import TypeJson from '@/utils/TypeJson.ts';
+import { TypeJson } from '@/utils/TypeJson.ts';
 import { translate } from '@/utils/utils.ts';
 
 const dataStore = useData();
@@ -234,12 +242,14 @@ function tryFindWord(hasWrongInfo: boolean = true) {
             form.value.addMeaning(mn);
         });
         form.value = TypeJson.copy(form.value); // 为了清除引用
-        ElMessage({
+        ElNotification({
+            title: '加载成功',
             message: `成功加载单词：${form.value.text}`,
-            type: 'info',
+            type: 'success',
         });
     } else if (hasWrongInfo) {
-        ElMessage({
+        ElNotification({
+            title: '加载失败',
             message: `找不到单词：${form.value.text}`,
             type: 'error',
         });
@@ -306,7 +316,8 @@ const isAITranslating = ref(false);
 function AITranslate() {
     const setting = dataStore.setting.AISetting;
     if (setting.apiKey === '' || setting.lang === '' || setting.modal === '') {
-        ElMessage({
+        ElNotification({
+            title: '翻译失败',
             message: `信息填写不完全，请到设置——AI补充信息。`,
             type: 'error',
         });

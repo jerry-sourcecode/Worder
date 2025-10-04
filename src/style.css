@@ -15,6 +15,10 @@
     flex-direction: row;
 }
 
+.center{
+    justify-content: center;
+}
+
 .c-flex {
     display: flex;
     flex-direction: column;
@@ -34,4 +38,9 @@
 
 .block{
     display: block;
+}
+
+.text{
+    user-select: none;
+    cursor: pointer;
 }

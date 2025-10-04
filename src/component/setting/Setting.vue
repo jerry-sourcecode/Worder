@@ -1,12 +1,13 @@
 <template>
-    <div style="padding: 25px">
+    <div style="padding: 0 25px 25px">
         <el-form @submit.prevent>
             <el-tabs model-value="user">
                 <el-tab-pane label="用户" name="user">
+                    <p class="desc">欢迎您，尊贵的用户</p>
                     <el-button type="danger" @click="onClearDataBtnClick">删除所有数据</el-button>
                 </el-tab-pane>
                 <el-tab-pane label="学习" name="study">
-                    <el-form-item label="当新单词输入框失焦或按下空格键时，自动在单词本中搜索">
+                    <el-form-item label="当新单词输入框失焦或按下回车键时，自动在单词本中搜索">
                         <el-switch
                             v-model="dataStore.setting.autoSearchInWordBook"
                             active-color="#13ce66"
@@ -226,6 +227,6 @@ function onClearDataBtnClick() {
 }
 
 p.desc {
-    margin: 10px 10px 10px 0;
+    margin: 5px 10px 10px 0;
 }
 </style>

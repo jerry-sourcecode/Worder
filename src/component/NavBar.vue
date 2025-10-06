@@ -10,7 +10,7 @@
         </el-menu-item>
         <el-menu-item index="/wordBook">
             <el-icon><Notebook /></el-icon>
-            <span>单词本</span>
+            <span>词书</span>
         </el-menu-item>
         <el-menu-item index="/setting">
             <el-icon><setting /></el-icon>

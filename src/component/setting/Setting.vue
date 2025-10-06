@@ -6,8 +6,21 @@
                     <p class="desc">欢迎您，尊贵的用户</p>
                     <el-button type="danger" @click="onClearDataBtnClick">删除所有数据</el-button>
                 </el-tab-pane>
-                <el-tab-pane label="学习" name="study">
-                    <el-form-item label="当新单词输入框失焦或按下回车键时，自动在单词本中搜索">
+                <el-tab-pane label="词书" name="book">
+                    <el-form-item label="拥有的词书">
+                        <List
+                            :source="dataStore.words"
+                            :stringToData="(string) => new WordBook(string, [])"
+                            v-slot="{ data }"
+                        >
+                            <p>{{ data.name }}</p>
+                        </List>
+                    </el-form-item>
+                </el-tab-pane>
+                <el-tab-pane label="学习和复习" name="check">
+                    <el-form-item
+                        label="学习时，当新单词输入框失焦或按下回车键时，自动在词书中搜索"
+                    >
                         <el-switch
                             v-model="dataStore.setting.autoSearchInWordBook"
                             active-color="#13ce66"
@@ -16,8 +29,6 @@
                             inactive-text="关闭"
                         />
                     </el-form-item>
-                </el-tab-pane>
-                <el-tab-pane label="复习" name="check">
                     <el-form-item label="检查时忽略大小写">
                         <el-switch
                             v-model="dataStore.setting.ignoreCase"
@@ -42,42 +53,13 @@
                 <el-tab-pane label="词性" name="pos">
                     <el-form-item label="可选词性" style="display: flex">
                         <div style="display: flex; flex-direction: column; width: 100%">
-                            <div
-                                v-for="(data, id) in dataStore.POS"
-                                :class="id == 0 ? `item-first` : ``"
-                                class="item"
-                                @mouseleave="currentHover = null"
-                                @mouseover="currentHover = id"
+                            <List
+                                :source="dataStore.POS"
+                                v-slot="{ data }"
+                                :allow-delete="(id) => id != 0"
                             >
-                                <p style="padding-left: 5px">
-                                    <em>{{ data }}</em
-                                    >.
-                                </p>
-                                <el-tooltip content="删除" effect="dark" placement="left">
-                                    <el-icon
-                                        v-if="currentHover === id && id != 0"
-                                        size="20px"
-                                        style="margin-right: 10px; margin-left: auto"
-                                        @click="dataStore.POS.splice(id, 1)"
-                                    >
-                                        <DeleteFilled />
-                                    </el-icon>
-                                </el-tooltip>
-                            </div>
-                            <div
-                                :class="isEditingPOS ? `` : `item-checkable`"
-                                class="item item-last"
-                                @click="addPOS"
-                            >
-                                <Input
-                                    ref="inputRef"
-                                    placeholder="输入新的可选词性"
-                                    @input-done="handleInputDone"
-                                />
-                                <p v-if="!isEditingPOS" style="padding-left: 5px">
-                                    增加一个新的可选词性
-                                </p>
-                            </div>
+                                <em>{{ data }}</em> .
+                            </List>
                         </div>
                     </el-form-item>
                 </el-tab-pane>
@@ -123,29 +105,12 @@
 
 <script setup lang="ts">
 import { useData } from '@/data/data.ts';
-import { ref, type Ref } from 'vue';
 import { ElForm, ElTabs } from 'element-plus';
-import Input from '../InputLabel.vue';
-import { DeleteFilled } from '@element-plus/icons-vue';
 import API from '@/utils/api.ts';
+import List from '@/component/List.vue';
+import { WordBook } from '@/data/modal.ts';
 
 const dataStore = useData();
-
-const currentHover: Ref<number | null> = ref(null);
-
-const inputRef = ref<InstanceType<typeof Input> | null>(null);
-
-const isEditingPOS = ref(false);
-function addPOS() {
-    if (isEditingPOS.value) return;
-    isEditingPOS.value = true;
-    inputRef.value?.display();
-}
-function handleInputDone(value: string) {
-    isEditingPOS.value = false;
-    if (value === '') return;
-    dataStore.POS.push(value);
-}
 
 function onClearDataBtnClick() {
     API.clearData();
@@ -154,78 +119,6 @@ function onClearDataBtnClick() {
 </script>
 
 <style scoped>
-.item {
-    border: 2px solid #f1f1f1;
-    border-top-width: 0;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-}
-.item-first {
-    border-top-width: 2px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-}
-.item-last {
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-.item-checkable {
-    cursor: pointer;
-    background-color: #e6f0fa;
-    color: #409eff;
-    font-weight: 500;
-    transition:
-        background-color 0.2s,
-        color 0.2s,
-        box-shadow 0.2s;
-    border: 2px dashed #b3d8ff;
-    border-top-width: 0;
-    text-align: center;
-    position: relative;
-}
-
-.item-checkable:hover {
-    background: linear-gradient(90deg, #e0f3ff 0%, #d0eaff 100%);
-    color: #0077ff;
-    box-shadow: 0 2px 8px 0 rgba(64, 158, 255, 0.08);
-    border-color: #409eff;
-}
-
-.item-checkable::before {
-    content: '+';
-    display: inline-block;
-    margin-right: 8px;
-    margin-left: 5px;
-    font-size: 18px;
-    vertical-align: middle;
-    color: #409eff;
-    transition: color 0.2s;
-}
-
-.item-checkable:hover::before {
-    color: #0077ff;
-}
-
-@keyframes itemCheckableClick {
-    0% {
-        box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.15);
-        background-color: #e6f0fa;
-    }
-    50% {
-        box-shadow: 0 0 8px 4px rgba(64, 158, 255, 0.15);
-        background-color: #b3d8ff;
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
-        background-color: #e6f0fa;
-    }
-}
-
-.item-checkable:active {
-    animation: itemCheckableClick 0.3s;
-}
-
 p.desc {
     margin: 5px 10px 10px 0;
 }

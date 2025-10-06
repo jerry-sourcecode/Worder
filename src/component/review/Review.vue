@@ -78,7 +78,9 @@
                 </div>
             </el-splitter-panel>
         </el-splitter>
-        <el-empty v-else description="所有单词都复习完了，快去学习吧" />
+        <div class="flex center-main center-align w-full" v-if="state === 'NoData'">
+            <el-empty description="所有的单词都复习完了" />
+        </div>
     </div>
 </template>
 

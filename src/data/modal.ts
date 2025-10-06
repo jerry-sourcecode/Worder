@@ -33,6 +33,17 @@ const SourceStatus = {
 } as const;
 type SourceStatus = (typeof SourceStatus)[keyof typeof SourceStatus];
 
+class WordBook {
+    /**单词本名*/
+    name: string;
+    /**单词*/
+    words: (Word | null)[];
+    constructor(name: string, words: Word[]) {
+        this.words = words;
+        this.name = name;
+    }
+}
+
 class Word {
     /** 单词文本 */
     text: string;
@@ -383,6 +394,7 @@ export {
     WordMeaningSet,
     WordMeaning,
     Setting,
+    WordBook,
     type ReviewInfo,
     ReviewMode,
     SourceStatus,

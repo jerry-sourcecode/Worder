@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { Setting, Word, type WordMeaning, WordMeaningSet } from './modal.ts';
+import { Setting, Word, WordBook, type WordMeaning, WordMeaningSet } from './modal.ts';
 import { computed, ref, type Ref, watch } from 'vue';
 import API from '@/utils/api.ts';
 import { TypeJson } from '@/utils/TypeJson.ts';
@@ -20,7 +20,8 @@ const AWM = {
 type AWM = (typeof AWM)[keyof typeof AWM];
 
 export const useData = defineStore('data', () => {
-    const words: Ref<(Word | null)[]> = ref([]);
+    const words: Ref<WordBook[]> = ref([]);
+    const nowWordBookName: Ref<string> = ref("默认词书");
     const POS: Ref<string[]> = ref([
         'unknown',
         'n',
@@ -39,6 +40,29 @@ export const useData = defineStore('data', () => {
     // 记录被删除单词的位置
     let nullList: number[] = [];
     /**
+     * 计算当前选中的单词书。
+     * 该计算属性会遍历所有单词书，找到与`nowWordBookName`匹配的单词书，并返回它。
+     * 如果没有找到匹配项，则返回默认值（数组中的第一个元素或空对象）。
+     *
+     * @returns {Object} 返回当前选中的单词书对象。
+     */
+    const calCurWordBook = computed(() => {
+        let x = -1;
+        words.value.forEach((v, i) => {
+            if (v.name == nowWordBookName.value) x = i;
+        })
+        return words.value[x];
+    })
+
+    /**
+     * 创建一个新的词书。
+     * @param {string} bookId - 词书的唯一标识符。
+     */
+    function creatWordBook(bookId: string)
+    {
+        words.value.push(new WordBook(bookId, []));
+    }
+    /**
      * 添加单词
      * @param word 单词文本
      * @param meanings 词义列表
@@ -53,20 +77,20 @@ export const useData = defineStore('data', () => {
         also: string[] = [],
         mode: AWM = AWM.append
     ): void {
-        const wd = new Word(words.value.length, word, meanings, also);
+        const wd = new Word(calCurWordBook.value.words.length, word, meanings, also);
         let hasChanged = false;
-        words.value.forEach((v, id) => {
+        calCurWordBook.value.words.forEach((v, id) => {
             if (v === null) return;
             if (v.text === word) {
                 if (mode === AWM.truct) {
-                    words.value[id]!.clearMeaning();
-                    words.value[id]!.synForm = [];
+                    calCurWordBook.value.words[id]!.clearMeaning();
+                    calCurWordBook.value.words[id]!.synForm = [];
                 }
                 wd.meaningSet.forEach((m) => {
-                    words.value[id]!.addMeaning(m);
+                    calCurWordBook.value.words[id]!.addMeaning(m);
                 });
                 wd.synForm.forEach((f) => {
-                    words.value[id]?.addSynForm(f.word);
+                    calCurWordBook.value.words[id]?.addSynForm(f.word);
                 })
                 hasChanged = true;
                 return;
@@ -74,9 +98,9 @@ export const useData = defineStore('data', () => {
         });
         if (hasChanged) return;
         if (nullList.length == 0) {
-            words.value.push(wd);
+            calCurWordBook.value.words.push(wd);
         } else {
-            words.value[nullList[0]] = new Word(nullList[0], word, meanings, also);
+            calCurWordBook.value.words[nullList[0]] = new Word(nullList[0], word, meanings, also);
             nullList.shift();
         }
     }
@@ -98,14 +122,14 @@ export const useData = defineStore('data', () => {
     function getWords(param: Word | string | number): Word[] | Word | null {
         const ans: Word[] = [];
         if (typeof param === 'string') {
-            words.value.forEach((w) => {
+            calCurWordBook.value.words.forEach((w) => {
                 if (w === null) return;
                 if (w.text === param) {
                     ans.push(w);
                 }
             });
         } else if (typeof param === 'number') {
-            return words.value[param];
+            return calCurWordBook.value.words[param];
         } else {
             return getWords(param.id);
         }
@@ -129,17 +153,17 @@ export const useData = defineStore('data', () => {
     function rmWords(param: Word | string | number): void {
         let rmpos = [];
         if (typeof param === 'string') {
-            words.value.forEach((w, i) => {
+            calCurWordBook.value.words.forEach((w, i) => {
                 if (w === null) return;
                 if (w.text === param) {
                     rmpos.push(i);
                 }
             });
         } else if (typeof param === 'number') {
-            if (words.value[param] === null) return;
+            if (calCurWordBook.value.words[param] === null) return;
             rmpos.push(param);
         } else {
-            words.value.forEach((w, i) => {
+            calCurWordBook.value.words.forEach((w, i) => {
                 if (w === null) return;
                 if (w.text === param.text) {
                     rmpos.push(i);
@@ -147,7 +171,7 @@ export const useData = defineStore('data', () => {
             });
         }
         rmpos.forEach((i) => {
-            words.value[i] = null;
+            calCurWordBook.value.words[i] = null;
             nullList.push(i);
         });
     }
@@ -157,7 +181,7 @@ export const useData = defineStore('data', () => {
      * @param callbackfn 回调函数
      */
     function forEach(callbackfn: (value: Word, index: number) => void) {
-        words.value.forEach((w, i) => {
+        calCurWordBook.value.words.forEach((w, i) => {
             if (w === null) return;
             callbackfn(w, i);
         });
@@ -167,7 +191,7 @@ export const useData = defineStore('data', () => {
      * @returns 可用单词列表
      */
     const availableWords = computed(() => {
-        return words.value.filter((word) => word !== null);
+        return calCurWordBook.value.words.filter((word) => word !== null);
     });
 
     watch(
@@ -175,6 +199,14 @@ export const useData = defineStore('data', () => {
         (n) => {
             API.setData('words', n);
             API.setData('nullList', nullList);
+        },
+        { deep: true }
+    );
+
+    watch(
+        nowWordBookName,
+        (n) => {
+            API.setData('nowWordBookName', n);
         },
         { deep: true }
     );
@@ -199,11 +231,14 @@ export const useData = defineStore('data', () => {
      * 从本地加载数据
      */
     function init() {
-        if (API.getData('words')) words.value = TypeJson.parse<Word[]>(API.getData('words')!);
+        if (API.getData('words')) words.value = TypeJson.parse<WordBook[]>(API.getData('words')!);
+        else words.value = [new WordBook("默认词书", [])]
         if (API.getData('nullList')) nullList = TypeJson.parse<number[]>(API.getData('nullList')!);
         if (API.getData('POS')) POS.value = TypeJson.parse<string[]>(API.getData('POS')!);
         if (API.getData('setting'))
             setting.value = TypeJson.parse<Setting>(API.getData('setting')!);
+        if (API.getData('nowWordBookName'))
+            nowWordBookName.value = API.getData('nowWordBookName')!;
     }
 
     return {
@@ -212,11 +247,13 @@ export const useData = defineStore('data', () => {
         rmWords,
         forEach,
         init,
+        creatWordBook,
         availableWords,
         POS,
         AWM,
         setting,
         words,
-        nullList
+        nullList,
+        nowWordBookName
     };
 });

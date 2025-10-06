@@ -17,15 +17,11 @@
                         type="primary"
                         @click="tryFindWord(true)"
                     >
-                        从单词本中查找
+                        从词书中查找
                     </el-button>
                     <el-button
-                        :disabled="
-                            form.text.trim().is('') ||
-                            isMeaningEditing ||
-                            !dataStore.setting.AISetting.useAi ||
-                            isAITranslating
-                        "
+                        :disabled="form.text.trim().is('') || isMeaningEditing || isAITranslating"
+                        v-if="dataStore.setting.AISetting.useAi"
                         style="margin-left: 20px"
                         type="primary"
                         @click="AITranslate"
@@ -129,7 +125,11 @@
             </el-form-item>
 
             <el-form-item v-if="!(isMeaningEditing || isSynFormEditing)">
-                <el-button type="primary" @click="rmMeaningBySource(SourceStatus.AI)">
+                <el-button
+                    type="primary"
+                    @click="rmMeaningBySource(SourceStatus.AI)"
+                    v-if="dataStore.setting.AISetting.useAi"
+                >
                     清除所有 AI 翻译的词义
                 </el-button>
                 <el-button
@@ -149,15 +149,7 @@
 <script setup lang="ts">
 import { nextTick, ref, type Ref } from 'vue';
 import { useData } from '@/data/data';
-import {
-    ElButton,
-    ElForm,
-    ElIcon,
-    ElInput,
-    ElMessage,
-    ElNotification,
-    ElSelect,
-} from 'element-plus';
+import { ElButton, ElForm, ElIcon, ElInput, ElMessage, ElNotification, ElSelect, } from 'element-plus';
 import { SourceStatus, Word, WordMeaning, WordMeaningSet } from '@/data/modal';
 import { DeleteFilled } from '@element-plus/icons-vue';
 import InputLabel from '@/component/InputLabel.vue';

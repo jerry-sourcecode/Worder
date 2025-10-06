@@ -15,8 +15,12 @@
     flex-direction: row;
 }
 
-.center{
+.center-main{
     justify-content: center;
+}
+
+.center-align{
+    align-items: center;
 }
 
 .c-flex {

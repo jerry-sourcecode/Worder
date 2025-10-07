@@ -12,23 +12,13 @@
                             :source="dataStore.words"
                             :stringToData="(string) => new WordBook(string, [])"
                             v-slot="{ data }"
+                            @before-delete="onBookBeforeDelete"
                         >
                             <p>{{ data.name }}</p>
                         </List>
                     </el-form-item>
                 </el-tab-pane>
                 <el-tab-pane label="学习和复习" name="check">
-                    <el-form-item
-                        label="学习时，当新单词输入框失焦或按下回车键时，自动在词书中搜索"
-                    >
-                        <el-switch
-                            v-model="dataStore.setting.autoSearchInWordBook"
-                            active-color="#13ce66"
-                            active-text="开启"
-                            inactive-color="#ff4949"
-                            inactive-text="关闭"
-                        />
-                    </el-form-item>
                     <el-form-item label="检查时忽略大小写">
                         <el-switch
                             v-model="dataStore.setting.ignoreCase"
@@ -89,13 +79,11 @@
                             :disabled="!dataStore.setting.AISetting.useAi"
                         />
                     </el-form-item>
-                    <el-form-item label="AI翻译">
-                        <el-form-item label="目标语言">
-                            <el-input
-                                v-model="dataStore.setting.AISetting.lang"
-                                :disabled="!dataStore.setting.AISetting.useAi"
-                            />
-                        </el-form-item>
+                    <el-form-item label="AI翻译：目标语言">
+                        <el-input
+                            v-model="dataStore.setting.AISetting.lang"
+                            :disabled="!dataStore.setting.AISetting.useAi"
+                        />
                     </el-form-item>
                 </el-tab-pane>
             </el-tabs>
@@ -105,7 +93,7 @@
 
 <script setup lang="ts">
 import { useData } from '@/data/data.ts';
-import { ElForm, ElTabs } from 'element-plus';
+import { ElForm, ElNotification, ElTabs } from 'element-plus';
 import API from '@/utils/api.ts';
 import List from '@/component/List.vue';
 import { WordBook } from '@/data/modal.ts';
@@ -115,6 +103,18 @@ const dataStore = useData();
 function onClearDataBtnClick() {
     API.clearData();
     location.reload();
+}
+
+function onBookBeforeDelete(data: WordBook) {
+    if (data.name === dataStore.setting.nowWordBookName) {
+        ElNotification({
+            title: '删除失败',
+            type: 'error',
+            message: `无法删除正在使用的词书。`,
+        });
+        return false;
+    }
+    return true;
 }
 </script>
 

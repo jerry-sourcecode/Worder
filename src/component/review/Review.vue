@@ -90,7 +90,7 @@ import { ElButton, ElEmpty, ElSplitter, ElSplitterPanel } from 'element-plus';
 import Inputer from '@/component/review/Inputer.vue';
 import { useData } from '@/data/data';
 import { ReviewMode, Word, WordMeaning } from '@/data/modal';
-import { calcProficiency, calcTimeDiffLevel } from '@/utils/utils';
+import { calcProficiency, getWordPriority } from '@/utils/utils';
 import { useRouter } from 'vue-router';
 
 /** 当前的单词 */
@@ -163,57 +163,6 @@ function getCurrentWord(): Word | undefined {
         minMode: ReviewMode = ReviewMode.ByWord;
     let reviewContent = dataStore.setting.reviewContent;
     if (!reviewContent.byWord && !reviewContent.byMeaning) return undefined;
-    /**
-     * 获取单词a的优先级
-     */
-    function getWordPriority(a: Word, reviewMode: ReviewMode): number {
-        const data = a.calculateProficiency();
-        const wm = a.meaningSet[data.setid].meaning[data.mid];
-        const lastReview = wm.getLastReview(reviewMode);
-        let reviewInfo;
-        if (reviewMode === ReviewMode.ByMeaning) reviewInfo = wm.reviewByMeaningInfo;
-        else reviewInfo = wm.reviewByWordInfo;
-        const netRtCount = reviewInfo.rightReviewCount - reviewInfo.wrongReviewCount;
-        let offset = 0;
-
-        // 对于所有的需要写出词义的练习，其优先级比写出单词低半级
-        if (reviewMode === ReviewMode.ByWord) {
-            offset += 5;
-        }
-
-        // 单词复习的优先级标准
-        // 复习生词（一级）
-        // - 复习从未复习过的单词（1）
-        if (lastReview.date === null) return 1 + offset;
-
-        const timeIntervalLevel = calcTimeDiffLevel(lastReview.date);
-        // 复习错误/极不熟练的单词（二级）
-        // - 昨天错误的单词（11）
-        if (timeIntervalLevel === 'Yesterday' && !lastReview.res) return 11 + offset;
-        // - 昨天正确，但是净正确次数少于等于3的单词（12）
-        if (timeIntervalLevel === 'Yesterday' && netRtCount <= 3) return 12 + offset;
-        // - 所有（不含今天）错误的单词（13）
-        if (timeIntervalLevel !== 'Today' && !lastReview.res) return 13 + offset;
-        // - 今天错误的单词（14）
-        if (!lastReview.res) return 14;
-        // 复习正确，但是不熟练的单词（三级）
-        // - 近7天（不含今天）正确的单词，但是净正确次数少于等于5的单词（20）
-        if (timeIntervalLevel === 'ThisWeek' && netRtCount <= 5) return 20 + offset;
-        // - 所有（不含今天）正确，但是净正确次数少于等于7的单词（21）
-        if (timeIntervalLevel !== 'Today' && netRtCount <= 7) return 21 + offset;
-        // 复习久远的单词（四级）
-        // - 一个月以外正确的单词（30）
-        if (timeIntervalLevel === 'Oldest') return 30 + offset;
-        // >> 一般复习结束
-        // 复习其他单词（五级）
-        // - 近一个月（不含今天）正确的单词（40）
-        if (timeIntervalLevel !== 'Today') return 40 + offset;
-        // 复习今天的单词（六级）
-        // - 复习今天正确的单词（50）
-        if (timeIntervalLevel === 'Today') return Infinity + offset;
-
-        return Infinity + offset;
-    }
     dataStore.forEach((v) => {
         const k = v.calculateProficiency();
         const minNum = minWord?.calculateProficiency();

@@ -21,7 +21,6 @@ type AWM = (typeof AWM)[keyof typeof AWM];
 
 export const useData = defineStore('data', () => {
     const words: Ref<WordBook[]> = ref([]);
-    const nowWordBookName: Ref<string> = ref("默认词书");
     const POS: Ref<string[]> = ref([
         'unknown',
         'n',
@@ -49,7 +48,7 @@ export const useData = defineStore('data', () => {
     const calCurWordBook = computed(() => {
         let x = -1;
         words.value.forEach((v, i) => {
-            if (v.name == nowWordBookName.value) x = i;
+            if (v.name == setting.value.nowWordBookName) x = i;
         })
         return words.value[x];
     })
@@ -58,7 +57,7 @@ export const useData = defineStore('data', () => {
      * 创建一个新的词书。
      * @param {string} bookId - 词书的唯一标识符。
      */
-    function creatWordBook(bookId: string)
+    function createWordBook(bookId: string)
     {
         words.value.push(new WordBook(bookId, []));
     }
@@ -204,14 +203,6 @@ export const useData = defineStore('data', () => {
     );
 
     watch(
-        nowWordBookName,
-        (n) => {
-            API.setData('nowWordBookName', n);
-        },
-        { deep: true }
-    );
-
-    watch(
         POS,
         (n) => {
             API.setData('POS', n);
@@ -237,8 +228,6 @@ export const useData = defineStore('data', () => {
         if (API.getData('POS')) POS.value = TypeJson.parse<string[]>(API.getData('POS')!);
         if (API.getData('setting'))
             setting.value = TypeJson.parse<Setting>(API.getData('setting')!);
-        if (API.getData('nowWordBookName'))
-            nowWordBookName.value = API.getData('nowWordBookName')!;
     }
 
     return {
@@ -247,13 +236,12 @@ export const useData = defineStore('data', () => {
         rmWords,
         forEach,
         init,
-        creatWordBook,
+        createWordBook,
         availableWords,
         POS,
         AWM,
         setting,
         words,
-        nullList,
-        nowWordBookName
+        nullList
     };
 });

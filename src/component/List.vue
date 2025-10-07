@@ -15,7 +15,7 @@
                     v-if="currentHover === id && allowDelete(id)"
                     size="20px"
                     style="margin-right: 10px; margin-left: auto"
-                    @click="source?.splice(id, 1)"
+                    @click="remove(data, id)"
                 >
                     <DeleteFilled />
                 </el-icon>
@@ -60,9 +60,6 @@ const props = withDefaults(
     }
 );
 
-// 定义插槽
-defineSlots();
-
 // 当前鼠标悬停的项目索引
 const currentHover: Ref<number | null> = ref(null);
 
@@ -84,6 +81,14 @@ function handleInputDone(value: string) {
     isEditing.value = false;
     if (value === '') return;
     source.value?.push(props.stringToData(value));
+}
+
+const emit = defineEmits<{
+    (e: 'beforeDelete', data: any, id: number): boolean;
+}>();
+
+function remove(data: any, id: number) {
+    if (emit('beforeDelete', data, id)) source?.splice(id, 1);
 }
 </script>
 

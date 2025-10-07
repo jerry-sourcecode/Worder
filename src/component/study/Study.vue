@@ -3,22 +3,8 @@
         <el-form :model="form" label-width="auto" style="margin: 5px" @submit.prevent>
             <el-form-item label="新单词：">
                 <div class="form">
-                    <el-input
-                        v-model="form.text"
-                        class="flex-grow"
-                        @blur="newWordBlur"
-                        @input="newWordInput"
-                        @keydown.enter="newWordBlur"
-                    >
+                    <el-input v-model="form.text" class="flex-grow" @input="newWordInput">
                     </el-input>
-                    <el-button
-                        :disabled="form.text.trim().is('') || isMeaningEditing"
-                        style="margin-left: 20px"
-                        type="primary"
-                        @click="tryFindWord(true)"
-                    >
-                        从词书中查找
-                    </el-button>
                     <el-button
                         :disabled="form.text.trim().is('') || isMeaningEditing || isAITranslating"
                         v-if="dataStore.setting.AISetting.useAi"
@@ -149,7 +135,15 @@
 <script setup lang="ts">
 import { nextTick, ref, type Ref } from 'vue';
 import { useData } from '@/data/data';
-import { ElButton, ElForm, ElIcon, ElInput, ElMessage, ElNotification, ElSelect, } from 'element-plus';
+import {
+    ElButton,
+    ElForm,
+    ElIcon,
+    ElInput,
+    ElMessage,
+    ElNotification,
+    ElSelect,
+} from 'element-plus';
 import { SourceStatus, Word, WordMeaning, WordMeaningSet } from '@/data/modal';
 import { DeleteFilled } from '@element-plus/icons-vue';
 import InputLabel from '@/component/InputLabel.vue';
@@ -216,7 +210,7 @@ function onSubmit() {
 
 const isWordRef: Ref<boolean> = ref(false);
 
-function tryFindWord(hasWrongInfo: boolean = true) {
+function tryFindWord(hasErrorInfo: boolean = true, hasSuccInfo: boolean = true) {
     const w = dataStore.getWords(form.value.text);
     if (w.length !== 0) {
         form_cache.value = TypeJson.copy(form.value);
@@ -234,12 +228,13 @@ function tryFindWord(hasWrongInfo: boolean = true) {
             form.value.addMeaning(mn);
         });
         form.value = TypeJson.copy(form.value); // 为了清除引用
-        ElNotification({
-            title: '加载成功',
-            message: `成功加载单词：${form.value.text}`,
-            type: 'success',
-        });
-    } else if (hasWrongInfo) {
+        if (hasSuccInfo)
+            ElNotification({
+                title: '加载成功',
+                message: `成功加载单词：${form.value.text}`,
+                type: 'success',
+            });
+    } else if (hasErrorInfo) {
         ElNotification({
             title: '加载失败',
             message: `找不到单词：${form.value.text}`,
@@ -265,18 +260,20 @@ function addOneSynForm() {
 }
 
 // 单词的关联和取消关联
-function newWordBlur() {
-    if (!isWordRef.value) {
-        tryFindWord(false);
-    }
-}
-
 function newWordInput(value: string) {
     if (isWordRef.value) {
         isWordRef.value = false;
         form.value = TypeJson.copy(form_cache.value!);
         form.value.text = value;
         form_cache.value = null;
+    }
+    if (form.value.text != '') {
+        const txt = form.value.text;
+        setTimeout(() => {
+            if (form.value.text === txt) {
+                tryFindWord(false, false);
+            }
+        }, 200);
     }
 }
 

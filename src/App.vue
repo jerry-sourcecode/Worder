@@ -62,10 +62,10 @@ const route = useRoute();
 const dataStore = useData();
 dataStore.init();
 
-const bookSelect = ref(dataStore.nowWordBookName);
+const bookSelect = ref(dataStore.setting.nowWordBookName);
 
 function bookChange(name: string) {
-    dataStore.nowWordBookName = name;
+    dataStore.setting.nowWordBookName = name;
     location.reload();
 }
 </script>

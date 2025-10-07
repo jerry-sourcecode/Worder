@@ -13,6 +13,22 @@ type ReviewInfo = {
     wrongReviewCount: number;
 };
 
+const SortBy = {
+    /**
+     * 按熟练度优先级
+     */
+    Priority: 0,
+    /**
+     * 字典序
+     */
+    Dictionary: 1,
+    /**
+     * 创建时间
+     */
+    CreateTime: 2,
+} as const;
+type SortBy = (typeof SortBy)[keyof typeof SortBy];
+
 // 复习的方式，即复习时展示的元素
 const ReviewMode = {
     /** 展示单词，要求写出意思 */
@@ -49,6 +65,8 @@ class Word {
     text: string;
     /** 同义形式 */
     synForm: SynForm[];
+    /** 创建时间 */
+    createTime: Date;
     /** 词义 */
     private _meaning: WordMeaningSet[];
     /** 单词的唯一标识 */
@@ -64,6 +82,7 @@ class Word {
         this._id = id;
         this._meaning = [];
         this.synForm = synForm.map((v) => new SynForm(v));
+        this.createTime = new Date();
         meaning.forEach((item) => {
             if (Array.isArray(item)) {
                 this.addMeaning(item);
@@ -354,7 +373,6 @@ class WordMeaning {
 
 class Setting {
     ignoreCase: boolean = false;
-    autoSearchInWordBook: boolean = false;
     useAI: boolean = false;
     AISetting: {
         useAi: boolean;
@@ -373,6 +391,15 @@ class Setting {
     } = {
         byWord: true,
         byMeaning: true,
+    };
+    nowWordBookName: string = '默认词书';
+    sort: {
+        sortBy: SortBy;
+        // 倒序排序
+        isRev: boolean;
+    } = {
+        sortBy: SortBy.CreateTime,
+        isRev: false,
     };
 }
 
@@ -399,4 +426,5 @@ export {
     ReviewMode,
     SourceStatus,
     SynForm,
+    SortBy,
 };

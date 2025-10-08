@@ -191,6 +191,22 @@ function calcTimeDiffLevel(
     return 'Oldest';
 }
 
+/**
+ * 将给定的字符串转换为HTML格式。
+ * @param {string} source - 需要被转换成HTML格式的原始字符串。
+ * @return {string} 返回转换后的HTML字符串，其中空格被替换为`&nbsp;`，换行符被替换为段落标签`<p>`和`</p>`。
+ */
+function toHtml(source: string) {
+    let tgt = '<p>';
+    for (let i = 0; i < source.length; i++) {
+        if (source[i] === ' ') tgt += '&nbsp;';
+        else if (source[i] === '\n') tgt += '</p><p>';
+        else tgt += source[i];
+    }
+    tgt += '</p>';
+    return tgt;
+}
+
 declare global {
     interface String {
         /**
@@ -344,4 +360,4 @@ class Queue<T> {
     }
 }
 
-export { calcProficiency, calcTimeDiffLevel, translate, Queue, getWordPriority };
+export { calcProficiency, calcTimeDiffLevel, translate, Queue, getWordPriority, toHtml };

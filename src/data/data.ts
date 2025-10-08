@@ -66,17 +66,19 @@ export const useData = defineStore('data', () => {
      * @param word 单词文本
      * @param meanings 词义列表
      * @param also 同时写作什么
+     * @param note 注释
      * @param mode 添加单词的模式
      */
-    function addWord(word: string, meanings: WordMeaningSet[], also?: string[], mode?: AWM): void;
-    function addWord(word: string, meanings: WordMeaning[][], also?: string[], mode?: AWM): void;
+    function addWord(word: string, meanings: WordMeaningSet[], also?: string[], note?: string, mode?: AWM): void;
+    function addWord(word: string, meanings: WordMeaning[][], also?: string[], note?: string, mode?: AWM): void;
     function addWord(
         word: string,
         meanings: (WordMeaningSet | WordMeaning[])[],
         also: string[] = [],
+        note: string = "",
         mode: AWM = AWM.append
     ): void {
-        const wd = new Word(calCurWordBook.value.words.length, word, meanings, also);
+        const wd = new Word(calCurWordBook.value.words.length, word, meanings, also, note);
         let hasChanged = false;
         calCurWordBook.value.words.forEach((v, id) => {
             if (v === null) return;
@@ -91,6 +93,7 @@ export const useData = defineStore('data', () => {
                 wd.synForm.forEach((f) => {
                     calCurWordBook.value.words[id]?.addSynForm(f.word);
                 })
+                calCurWordBook.value.words[id]!.note = wd.note;
                 hasChanged = true;
                 return;
             }
@@ -99,7 +102,7 @@ export const useData = defineStore('data', () => {
         if (nullList.length == 0) {
             calCurWordBook.value.words.push(wd);
         } else {
-            calCurWordBook.value.words[nullList[0]] = new Word(nullList[0], word, meanings, also);
+            calCurWordBook.value.words[nullList[0]] = new Word(nullList[0], word, meanings, also, note);
             nullList.shift();
         }
     }

@@ -110,6 +110,15 @@
                 </div>
             </el-form-item>
 
+            <el-form-item label="注释">
+                <el-input
+                    v-model="form.note"
+                    type="textarea"
+                    placeholder="输入注释"
+                    :autosize="{ minRows: 2, maxRows: 8 }"
+                />
+            </el-form-item>
+
             <el-form-item v-if="!(isMeaningEditing || isSynFormEditing)">
                 <el-button
                     type="primary"
@@ -189,21 +198,16 @@ function addOneMeaning() {
 }
 
 function onSubmit() {
-    const word = new Word(
-        -1,
+    dataStore.addWord(
         form.value.text,
         form.value.meaningSet as WordMeaningSet[],
-        form.value.synForm.map((v) => v.word)
-    );
-    dataStore.addWord(
-        word.text,
-        word.meaningSet,
-        word.synForm.map((v) => v.word),
+        form.value.synForm.map((v) => v.word),
+        form.value.note,
         isWordRef.value ? dataStore.AWM.truct : dataStore.AWM.append
     );
     ElNotification({
         title: '学习成功！',
-        message: `单词“${word.text}”${isWordRef.value ? '已更新' : '已创建'}！`,
+        message: `单词“${form.value.text}”${isWordRef.value ? '已更新' : '已创建'}！`,
     });
     form.value = new Word(-1, '', []);
 }
@@ -227,6 +231,7 @@ function tryFindWord(hasErrorInfo: boolean = true, hasSuccInfo: boolean = true) 
             });
             form.value.addMeaning(mn);
         });
+        form.value.note = w[0].note;
         form.value = TypeJson.copy(form.value); // 为了清除引用
         if (hasSuccInfo)
             ElNotification({
@@ -263,8 +268,23 @@ function addOneSynForm() {
 function newWordInput(value: string) {
     if (isWordRef.value) {
         isWordRef.value = false;
-        form.value = TypeJson.copy(form_cache.value!);
+        for (let i = form.value.synForm.length - 1; i >= 0; i--) {
+            if (form.value.synForm[i].source === SourceStatus.WordBook) {
+                form.value.synForm.splice(i, 1);
+            }
+        }
+        for (let i = form.value.meaningSet.length - 1; i >= 0; i--) {
+            for (let j = form.value.meaningSet[i].meaning.length - 1; j >= 0; j--) {
+                if (form.value.meaningSet[i].meaning[j].source === SourceStatus.WordBook) {
+                    form.value.meaningSet[i].meaning.splice(j, 1);
+                }
+            }
+            if (form.value.meaningSet[i].meaning.length == 0) {
+                form.value.meaningSet.splice(i, 1);
+            }
+        }
         form.value.text = value;
+        form.value.note = form_cache.value?.note!;
         form_cache.value = null;
     }
     if (form.value.text != '') {

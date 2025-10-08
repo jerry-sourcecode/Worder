@@ -67,6 +67,8 @@ class Word {
     synForm: SynForm[];
     /** 创建时间 */
     createTime: Date;
+    /** 注释 */
+    note: string;
     /** 词义 */
     private _meaning: WordMeaningSet[];
     /** 单词的唯一标识 */
@@ -76,13 +78,15 @@ class Word {
         id: number,
         text: string,
         meaning: (WordMeaningSet | WordMeaning[])[] = [],
-        synForm: string[] = []
+        synForm: string[] = [],
+        note: string = ''
     ) {
         this.text = text;
         this._id = id;
         this._meaning = [];
         this.synForm = synForm.map((v) => new SynForm(v));
         this.createTime = new Date();
+        this.note = note;
         meaning.forEach((item) => {
             if (Array.isArray(item)) {
                 this.addMeaning(item);

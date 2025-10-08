@@ -14,13 +14,18 @@
                             v-if="
                                 curMode == ReviewMode.ByWord && curProblem!.otherMeaning!.length > 0
                             "
-                            style="font-size: 25px"
+                            style="font-size: 20px"
                         >
                             其他释义：
                             <span v-for="item in curProblem?.otherMeaning">
                                 <span>{{ item.text }}；</span>
                             </span>
                         </div>
+                        <div
+                            v-html="toHtml(currentWord?.note!)"
+                            style="font-size: 20px"
+                            class="c-flex center-align center-main"
+                        />
                     </div>
                 </div>
             </el-splitter-panel>
@@ -90,7 +95,7 @@ import { ElButton, ElEmpty, ElSplitter, ElSplitterPanel } from 'element-plus';
 import Inputer from '@/component/review/Inputer.vue';
 import { useData } from '@/data/data';
 import { ReviewMode, Word, WordMeaning } from '@/data/modal';
-import { calcProficiency, getWordPriority } from '@/utils/utils';
+import { calcProficiency, getWordPriority, toHtml } from '@/utils/utils';
 import { useRouter } from 'vue-router';
 
 /** 当前的单词 */

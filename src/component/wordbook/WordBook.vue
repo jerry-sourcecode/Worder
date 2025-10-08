@@ -1,16 +1,30 @@
 <template>
-    <div style="margin: 0 10px 10px 20px">
-        排序方式：
-        <el-select
-            v-model="dataStore.setting.sort.sortBy"
-            placeholder="排序方式"
-            style="width: 140px; margin-right: 10px"
-        >
-            <el-option label="创建时间" :value="SortBy.CreateTime" />
-            <el-option label="熟练度" :value="SortBy.Priority" />
-            <el-option label="单词字典序" :value="SortBy.Dictionary" />
-        </el-select>
-        <el-switch v-model="dataStore.setting.sort.isRev" active-text="倒序" inactive-text="顺序" />
+    <div style="margin: 0 10px 10px 20px" class="flex">
+        <div>
+            排序方式：
+            <el-select
+                v-model="dataStore.setting.sort.sortBy"
+                placeholder="排序方式"
+                style="width: 140px; margin-right: 10px"
+            >
+                <el-option label="创建时间" :value="SortBy.CreateTime" />
+                <el-option label="熟练度" :value="SortBy.Priority" />
+                <el-option label="单词字典序" :value="SortBy.Dictionary" />
+            </el-select>
+            <el-switch
+                v-model="dataStore.setting.sort.isRev"
+                active-text="倒序"
+                inactive-text="顺序"
+            />
+        </div>
+        <div style="margin-left: auto; margin-right: 20px">
+            <el-input
+                v-model="searchText"
+                style="width: 300px"
+                placeholder="搜索单词/词义"
+                :prefix-icon="Search"
+            />
+        </div>
     </div>
     <el-card
         v-for="item in sortedWords"
@@ -31,6 +45,7 @@
                     同时写作：
                     <span v-for="form in item?.synForm">{{ form.word }}；</span>
                 </div>
+                <div v-html="toHtml(item?.note)" />
             </div>
             <el-tooltip content="删除" effect="dark" placement="left">
                 <el-icon
@@ -51,17 +66,18 @@
 <script setup lang="ts">
 import { useData } from '@/data/data.ts';
 import { computed, ref } from 'vue';
-import { DeleteFilled } from '@element-plus/icons-vue';
-import { getWordPriority } from '@/utils/utils.ts';
+import { DeleteFilled, Search } from '@element-plus/icons-vue';
+import { getWordPriority, toHtml } from '@/utils/utils.ts';
 import { ReviewMode, SortBy } from '@/data/modal.ts';
 import { TypeJson } from '@/utils/TypeJson.ts';
+import { StringSearcher } from '@/utils/KMP.ts';
 
 const dataStore = useData();
 
 const currentHover = ref<number | null>(null);
 
 function calLevel(id: number) {
-    const prio = Math.max(
+    const prio = Math.min(
         getWordPriority(dataStore.getWords(id)!, ReviewMode.ByWord),
         getWordPriority(dataStore.getWords(id)!, ReviewMode.ByMeaning)
     );
@@ -71,7 +87,8 @@ function calLevel(id: number) {
 }
 
 const sortedWords = computed(() => {
-    const sorted = TypeJson.copy(dataStore.availableWords);
+    const stringComp = new StringSearcher(searchText.value);
+    let sorted = TypeJson.copy(dataStore.availableWords);
     sorted.sort((a, b) => {
         let res = 0;
         switch (dataStore.setting.sort.sortBy) {
@@ -88,8 +105,21 @@ const sortedWords = computed(() => {
         if (dataStore.setting.sort.isRev) return -res;
         return res;
     });
+
+    if (searchText.value != '')
+        sorted = sorted.filter((v) => {
+            if (stringComp.check(v?.text)) return true;
+            for (let i = 0; i < v?.meaningSet.length; i++) {
+                for (let j = 0; j < v?.meaningSet[i].meaning.length; j++) {
+                    if (stringComp.check(v?.meaningSet[i].meaning[j].text)) return true;
+                }
+            }
+            return false;
+        });
     return sorted;
 });
+
+const searchText = ref('');
 </script>
 
 <style scoped>

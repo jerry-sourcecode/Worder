@@ -196,6 +196,8 @@ export const useData = defineStore('data', () => {
         return calCurWordBook.value.words.filter((word) => word !== null);
     });
 
+    API.setData('version', 'v1.0');
+
     watch(
         words,
         (n) => {

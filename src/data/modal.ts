@@ -1,4 +1,5 @@
 import { calcProficiency } from '@/utils/utils';
+import { TypeJsonIgnore } from '@/utils/TypeJson.ts';
 
 type ReviewInfo = {
     /** 首次学习时间 */
@@ -271,6 +272,7 @@ class WordMeaning {
     /** 词义 */
     text: string;
     /** 来源 */
+    @TypeJsonIgnore()
     source: SourceStatus = SourceStatus.Simple;
     /** 以将单词作为已知，要求写出词义这种方式进行复习的信息 */
     private readonly _reviewByWordInfo: ReviewInfo;

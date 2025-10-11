@@ -144,15 +144,7 @@
 <script setup lang="ts">
 import { nextTick, ref, type Ref } from 'vue';
 import { useData } from '@/data/data';
-import {
-    ElButton,
-    ElForm,
-    ElIcon,
-    ElInput,
-    ElMessage,
-    ElNotification,
-    ElSelect,
-} from 'element-plus';
+import { ElButton, ElForm, ElFormItem, ElIcon, ElInput, ElMessage, ElNotification, ElSelect, } from 'element-plus';
 import { SourceStatus, Word, WordMeaning, WordMeaningSet } from '@/data/modal';
 import { DeleteFilled } from '@element-plus/icons-vue';
 import InputLabel from '@/component/InputLabel.vue';
@@ -268,21 +260,7 @@ function addOneSynForm() {
 function newWordInput(value: string) {
     if (isWordRef.value) {
         isWordRef.value = false;
-        for (let i = form.value.synForm.length - 1; i >= 0; i--) {
-            if (form.value.synForm[i].source === SourceStatus.WordBook) {
-                form.value.synForm.splice(i, 1);
-            }
-        }
-        for (let i = form.value.meaningSet.length - 1; i >= 0; i--) {
-            for (let j = form.value.meaningSet[i].meaning.length - 1; j >= 0; j--) {
-                if (form.value.meaningSet[i].meaning[j].source === SourceStatus.WordBook) {
-                    form.value.meaningSet[i].meaning.splice(j, 1);
-                }
-            }
-            if (form.value.meaningSet[i].meaning.length == 0) {
-                form.value.meaningSet.splice(i, 1);
-            }
-        }
+        rmMeaningBySource(SourceStatus.WordBook);
         form.value.text = value;
         form.value.note = form_cache.value?.note!;
         form_cache.value = null;

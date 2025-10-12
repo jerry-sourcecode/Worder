@@ -1,3 +1,22 @@
+<!--
+# List.vue 组件
+
+## 效果
+- 显示一个列表，每个列表项可以被删除或重命名。
+- 列表的最后一项是一个可点击的区域，用于添加新的列表项。
+
+## Props
+- `stringToData`: (可选) 将字符串转换为数据对象的函数，默认为 `(arg0: string) => arg0`。
+- `allowDelete`: (可选) 确定是否允许删除某项的函数，默认为 `() => true`。
+- `dataToString`: (可选) 将数据对象转换为字符串的函数，默认为 `(data: any) => data`。
+- `allowRename`: (可选) 确定是否允许重命名某项的函数，默认为 `() => true`。
+
+## Emits
+- `beforeDelete`: 在删除某项之前触发，参数为要删除的数据和一个回调函数，回调函数接收一个布尔值，决定是否继续删除操作。
+
+## Model
+- `source`: 用于接收外部传递的数据数组。
+-->
 <template>
     <div style="display: flex; flex-direction: column; width: 100%">
         <div
@@ -8,18 +27,31 @@
             @mouseover="currentHover = id"
         >
             <p style="padding-left: 5px">
-                <slot :data="data" />
+                <slot :data="data" v-if="isRenameId != id" />
+                <InputLabel :ref="(el) => setGraphRef(el as any, id)" />
             </p>
-            <el-tooltip content="删除" effect="dark" placement="left">
-                <el-icon
-                    v-if="currentHover === id && allowDelete(id)"
-                    size="20px"
-                    style="margin-right: 10px; margin-left: auto"
-                    @click="remove(data, id)"
-                >
-                    <DeleteFilled />
-                </el-icon>
-            </el-tooltip>
+            <div style="margin-left: auto; display: flex; align-items: center">
+                <el-tooltip content="删除" effect="dark" placement="left">
+                    <el-icon
+                        v-if="currentHover === id && allowRename(id)"
+                        size="22px"
+                        style="margin-right: 15px"
+                        @click="remove(data, id)"
+                    >
+                        <DeleteFilled />
+                    </el-icon>
+                </el-tooltip>
+                <el-tooltip content="重命名" effect="dark" placement="top">
+                    <el-icon
+                        v-if="currentHover === id && allowRename(id)"
+                        size="22px"
+                        style="margin-right: 15px; margin-left: auto"
+                        @click="rename(id)"
+                    >
+                        <Edit />
+                    </el-icon>
+                </el-tooltip>
+            </div>
         </div>
         <div :class="isEditing ? `` : `item-checkable`" class="item item-last" @click="add">
             <Input ref="inputRef" placeholder="输入新的可选词性" @input-done="handleInputDone" />
@@ -29,21 +61,12 @@
 </template>
 
 <script setup lang="ts">
-/**
- * 该组件用于显示一个列表，并允许用户添加和删除项目。
- * 使用方法：
- * 1. 通过 `source` 属性传递要显示的数据数组。
- * 2. 通过 `stringToData` 属性传递一个函数，将输入的字符串转换为数据对象（可选）。
- * 3. 通过插槽传递每个项目的显示内容。
- *
- * 示例：
- * <List :source="data" v-slot="{ data }">
- *   <em>{{ data }}</em> .
- * </List>
- */
-import { DeleteFilled } from '@element-plus/icons-vue';
+import { DeleteFilled, Edit } from '@element-plus/icons-vue';
 import Input from '@/component/InputLabel.vue';
+import InputLabel from '@/component/InputLabel.vue';
 import { ref, type Ref } from 'vue';
+
+type InputLabelInstance = InstanceType<typeof InputLabel>;
 
 // 定义 source 模型，用于接收外部传递的数据数组
 const source = defineModel<Array<any>>('source');
@@ -51,12 +74,16 @@ const source = defineModel<Array<any>>('source');
 // 定义 props，可以传入一个将字符串转换为数据对象的函数
 const props = withDefaults(
     defineProps<{
-        stringToData?: (string: string) => any;
+        stringToData?: (string: string, baseData: any) => any;
         allowDelete?: (id: number) => boolean;
+        dataToString?: (data: any) => string;
+        allowRename?: (id: number) => boolean;
     }>(),
     {
         stringToData: (arg0: string) => arg0,
+        dataToString: (data: any) => data,
         allowDelete: () => true,
+        allowRename: () => true,
     }
 );
 
@@ -80,15 +107,35 @@ function add() {
 function handleInputDone(value: string) {
     isEditing.value = false;
     if (value === '') return;
-    source.value?.push(props.stringToData(value));
+    source?.value!.push(props.stringToData(value, null));
 }
 
 const emit = defineEmits<{
-    (e: 'beforeDelete', data: any, id: number): boolean;
+    beforeDelete: [data: any, returnFn: (v: boolean) => void];
 }>();
 
 function remove(data: any, id: number) {
-    if (emit('beforeDelete', data, id)) source?.splice(id, 1);
+    emit('beforeDelete', data, (v) => {
+        if (v) {
+            source?.value!.splice(id, 1);
+        }
+    });
+}
+
+const inputLabelRefList: Ref<(InputLabelInstance | null)[]> = ref([]);
+const isRenameId = ref(-1);
+function setGraphRef(el: InputLabelInstance, id: number) {
+    while (inputLabelRefList.value.length <= id) {
+        inputLabelRefList.value.push(null);
+    }
+    inputLabelRefList.value[id] = el;
+}
+function rename(id: number) {
+    isRenameId.value = id;
+    inputLabelRefList.value[id]?.display(props.dataToString(source.value![id])).then((res) => {
+        source.value![id] = props.stringToData(res, source.value![id]);
+        isRenameId.value = -1;
+    });
 }
 </script>
 

@@ -48,3 +48,20 @@
     user-select: none;
     cursor: pointer;
 }
+
+/* Review */
+
+.bk-correct {
+    background-color: #b3e19d;
+    transition: background-color 1s ease;
+}
+
+.bk-wrong {
+    background-color: #fab6b6;
+    transition: background-color 1s ease;
+}
+
+/* WordBook */
+.el-card__body {
+    width: 100%;
+}

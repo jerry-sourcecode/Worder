@@ -10,7 +10,12 @@
                     <el-form-item label="拥有的词书">
                         <List
                             :source="dataStore.words"
-                            :stringToData="(string) => new WordBook(string, [])"
+                            :stringToData="wordBookListStringToData"
+                            :dataToString="(d) => d.name"
+                            :allow-rename="
+                                (id) =>
+                                    dataStore.words[id].name != dataStore.setting.nowWordBookName
+                            "
                             v-slot="{ data }"
                             @before-delete="onBookBeforeDelete"
                         >
@@ -97,6 +102,7 @@ import { ElForm, ElNotification, ElTabs } from 'element-plus';
 import API from '@/utils/api.ts';
 import List from '@/component/List.vue';
 import { WordBook } from '@/data/modal.ts';
+import { useEmitter } from '@/utils/emitter.ts';
 
 const dataStore = useData();
 
@@ -105,16 +111,46 @@ function onClearDataBtnClick() {
     location.reload();
 }
 
-function onBookBeforeDelete(data: WordBook) {
+const emitter = useEmitter();
+
+function onBookBeforeDelete(data: WordBook, returnFn: (v: boolean) => void) {
     if (data.name === dataStore.setting.nowWordBookName) {
         ElNotification({
             title: '删除失败',
             type: 'error',
             message: `无法删除正在使用的词书。`,
         });
-        return false;
-    }
-    return true;
+        returnFn(false);
+    } else
+        emitter
+            .emit(
+                'dialog',
+                '确认',
+                `在${data.name}中发现${data.words.filter((v) => v).length}个单词，确定要全部删除吗？此操作无法撤回。`,
+                [
+                    {
+                        msg: '确认',
+                        id: '0',
+                        emphasize: false,
+                    },
+                    {
+                        msg: '取消',
+                        id: '1',
+                        emphasize: true,
+                    },
+                ]
+            )
+            .then((res) => {
+                if (res == '0') returnFn(true);
+                else returnFn(false);
+            })
+            .catch(() => {
+                returnFn(false);
+            });
+}
+
+function wordBookListStringToData(string: string, data: WordBook) {
+    return new WordBook(string, data?.words ?? []);
 }
 </script>
 

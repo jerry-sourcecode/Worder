@@ -51,12 +51,12 @@
                 <el-icon
                     v-if="currentHover === item?.id"
                     size="30px"
-                    @click="dataStore.rmWords(item.id)"
+                    @click="dataStore.rmWordsById(item.id)"
                     ><DeleteFilled
                 /></el-icon>
             </el-tooltip>
             <el-icon v-if="currentHover !== item.id" size="30px">
-                <el-image :src="`/image/L${calLevel(item.id)}.png`" />
+                <el-image :src="getImg(item?.id)" />
             </el-icon>
         </div>
     </el-card>
@@ -71,15 +71,18 @@ import { getWordPriority, toHtml } from '@/utils/utils.ts';
 import { ReviewMode, SortBy } from '@/data/modal.ts';
 import { TypeJson } from '@/utils/TypeJson.ts';
 import { StringSearcher } from '@/utils/KMP.ts';
+import L1Img from '@/assets/image/L1.png';
+import L2Img from '@/assets/image/L2.png';
+import L3Img from '@/assets/image/L3.png';
 
 const dataStore = useData();
 
-const currentHover = ref<number | null>(null);
+const currentHover = ref<string | null>(null);
 
-function calLevel(id: number) {
+function calLevel(id: string) {
     const prio = Math.min(
-        getWordPriority(dataStore.getWords(id)!, ReviewMode.ByWord),
-        getWordPriority(dataStore.getWords(id)!, ReviewMode.ByMeaning)
+        getWordPriority(dataStore.getWordsById(id)!, ReviewMode.ByWord),
+        getWordPriority(dataStore.getWordsById(id)!, ReviewMode.ByMeaning)
     );
     if (prio >= 1 && prio <= 19) return 1;
     if (prio >= 20 && prio <= 39) return 2;
@@ -120,6 +123,19 @@ const sortedWords = computed(() => {
 });
 
 const searchText = ref('');
+
+function getImg(id: string) {
+    switch (calLevel(id)) {
+        case 1:
+            return L1Img;
+        case 2:
+            return L2Img;
+        case 3:
+            return L3Img;
+        default:
+            return L3Img;
+    }
+}
 </script>
 
 <style scoped>
@@ -127,11 +143,5 @@ const searchText = ref('');
     font-size: larger;
     font-weight: bold;
     margin-bottom: 7px;
-}
-</style>
-
-<style>
-.el-card__body {
-    width: 100%;
 }
 </style>

@@ -1,5 +1,4 @@
 import { calcProficiency } from '@/utils/utils';
-import { TypeJsonIgnore } from '@/utils/TypeJson.ts';
 
 type ReviewInfo = {
     /** 首次学习时间 */
@@ -55,7 +54,7 @@ class WordBook {
     name: string;
     /**单词*/
     words: (Word | null)[];
-    constructor(name: string, words: Word[]) {
+    constructor(name: string, words: (Word | null)[]) {
         this.words = words;
         this.name = name;
     }
@@ -73,10 +72,10 @@ class Word {
     /** 词义 */
     private _meaning: WordMeaningSet[];
     /** 单词的唯一标识 */
-    private readonly _id: number;
+    private readonly _id: string;
 
     constructor(
-        id: number,
+        id: string,
         text: string,
         meaning: (WordMeaningSet | WordMeaning[])[] = [],
         synForm: string[] = [],
@@ -103,7 +102,7 @@ class Word {
     }
 
     /** 单词的唯一标识 */
-    get id(): number {
+    get id(): string {
         return this._id;
     }
 
@@ -272,7 +271,6 @@ class WordMeaning {
     /** 词义 */
     text: string;
     /** 来源 */
-    @TypeJsonIgnore()
     source: SourceStatus = SourceStatus.Simple;
     /** 以将单词作为已知，要求写出词义这种方式进行复习的信息 */
     private readonly _reviewByWordInfo: ReviewInfo;

@@ -1,19 +1,20 @@
 <!--
-API说明：
-属性：
-- placeholder: string：占位字符
-- default: string：默认数据
-方法：
-display(value?: string): Promise<string>
-- 创建时，输入框时隐藏的，这个方法回让输入框显现，并自动聚焦，在输入框失焦后，输入框自动隐藏
-- 参数value：初始值，默认为prop.default
-- 返回值：Promise<string>，输入结果
-    - 兑现时机：输入框失焦时
-    - 拒绝时机：无
-事件：
-input-done: (value: string) => void
-- 触发时机：输入框失焦时
-- 参数value：输入框内容
+## InputLabel 组件
+
+### 效果
+- 输入框根据 `isShow` 状态条件性渲染。
+- 调用 `display` 方法时，输入框显示并聚焦。
+- 失去焦点时，输入框隐藏，并触发 `input-done` 事件，传递当前输入值。
+
+### 属性
+- `placeholder`: 设置输入框的占位符文本。
+- `default`: 设置输入框的默认值。
+
+### 事件
+- `input-done`: 当输入框失去焦点时触发。传递当前输入值作为参数。
+
+### 方法
+- `display(value: string)`: 显示输入框并可选地设置初始值，然后聚焦。返回一个 Promise，当输入框失去焦点时解析为输入值。
 -->
 <template>
     <el-input

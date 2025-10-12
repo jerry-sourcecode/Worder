@@ -144,7 +144,7 @@
 <script setup lang="ts">
 import { nextTick, ref, type Ref } from 'vue';
 import { useData } from '@/data/data';
-import { ElButton, ElForm, ElFormItem, ElIcon, ElInput, ElMessage, ElNotification, ElSelect, } from 'element-plus';
+import { ElButton, ElIcon, ElInput, ElMessage, ElNotification } from 'element-plus';
 import { SourceStatus, Word, WordMeaning, WordMeaningSet } from '@/data/modal';
 import { DeleteFilled } from '@element-plus/icons-vue';
 import InputLabel from '@/component/InputLabel.vue';
@@ -154,7 +154,7 @@ import { translate } from '@/utils/utils.ts';
 
 const dataStore = useData();
 
-const form = ref<Word>(new Word(-1, '', []));
+const form = ref<Word>(new Word('', '', []));
 const form_cache = ref<Word | null>(null);
 
 const isMeaningEditing = ref(false);
@@ -201,15 +201,15 @@ function onSubmit() {
         title: '学习成功！',
         message: `单词“${form.value.text}”${isWordRef.value ? '已更新' : '已创建'}！`,
     });
-    form.value = new Word(-1, '', []);
+    form.value = new Word('', '', []);
 }
 
 const isWordRef: Ref<boolean> = ref(false);
 
 function tryFindWord(hasErrorInfo: boolean = true, hasSuccInfo: boolean = true) {
-    const w = dataStore.getWords(form.value.text);
+    const w = dataStore.getWordsByText(form.value.text);
     if (w.length !== 0) {
-        form_cache.value = TypeJson.copy(form.value);
+        form_cache.value = TypeJson.copy(form.value); // 备份
         isWordRef.value = true;
         // 清除之前的导入内容
         rmMeaningBySource(SourceStatus.WordBook);

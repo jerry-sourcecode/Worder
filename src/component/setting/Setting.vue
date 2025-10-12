@@ -11,7 +11,7 @@
                         <List
                             :source="dataStore.words"
                             :stringToData="wordBookListStringToData"
-                            :dataToString="(data) => data.name"
+                            :dataToString="(d) => d.name"
                             :allow-rename="
                                 (id) =>
                                     dataStore.words[id].name != dataStore.setting.nowWordBookName

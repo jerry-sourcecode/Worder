@@ -31,17 +31,18 @@
             </el-splitter-panel>
             <el-splitter-panel size="50%">
                 <div class="c-flex" style="height: 100%">
-                    <Inputer
-                        v-model:value="transText"
-                        :class="
-                            `input-wrong`
-                                .if(state === 'Wrong')
-                                .elif(state === `Correct`, `input-correct`)
-                        "
+                    <el-input
+                        v-model="transText"
                         placeholder="在此输入翻译的结果"
-                        @input:enter="onInputerInput(`Enter`)"
-                        @input:other="onInputerInput(`Other`)"
-                    ></Inputer>
+                        class="h-full"
+                        :input-style="
+                            `font-size: 40px; height: 100%; text-align:center;` +
+                            `color: #f56c6c;`
+                                .if(state === 'Wrong')
+                                .elif(state === `Correct`, `color: #67c23a;`)
+                        "
+                        @keydown="onInputKeyDown($event)"
+                    />
                 </div>
             </el-splitter-panel>
             <el-splitter-panel
@@ -92,7 +93,6 @@
 <script setup lang="ts">
 import { computed, onMounted, type Ref, ref, watch } from 'vue';
 import { ElButton, ElEmpty, ElSplitter, ElSplitterPanel } from 'element-plus';
-import Inputer from '@/component/review/Inputer.vue';
 import { useData } from '@/data/data';
 import { ReviewMode, Word, WordMeaning } from '@/data/modal';
 import { calcProficiency, getWordPriority, toHtml } from '@/utils/utils';
@@ -163,7 +163,7 @@ const transText = ref('');
  * 获得下一个需要复习的单词，没有则返回undefined
  */
 function getCurrentWord(): Word | undefined {
-    let minWordId = -1,
+    let minWordId = '',
         minWord: Word | null = null,
         minMode: ReviewMode = ReviewMode.ByWord;
     let reviewContent = dataStore.setting.reviewContent;
@@ -193,7 +193,7 @@ function getCurrentWord(): Word | undefined {
 
         if (getWordPriority(v, mode))
             if (
-                minWordId === -1 ||
+                minWordId === '' ||
                 getWordPriority(v, mode) < getWordPriority(minWord!, minMode) ||
                 (getWordPriority(v, mode) === getWordPriority(minWord!, minMode) &&
                     minNum!.proficiency > k.proficiency)
@@ -208,11 +208,11 @@ function getCurrentWord(): Word | undefined {
             }
     });
     if (!minWord || getWordPriority(minWord, minMode) === Infinity) return undefined;
-    return dataStore.getWords(minWordId) ?? undefined;
+    return dataStore.getWordsById(minWordId) ?? undefined;
 }
 
-function onInputerInput(type: 'Enter' | 'Other') {
-    if (type === 'Enter') {
+function onInputKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
         if (transText.value) checkTranslation();
     } else {
         if (state.value === 'Wrong') {
@@ -233,9 +233,8 @@ function checkTranslation() {
         rfNewWord();
         return;
     }
-    const wm: WordMeaning = dataStore.getWords(currentWord.value!.id)?.meaningSet[
-        currentWordSid.value!
-    ].meaning[currentWordMid.value!]!;
+    const wm: WordMeaning =
+        currentWord.value?.meaningSet[currentWordSid.value!].meaning[currentWordMid.value!]!;
     let correct: string;
     if (curMode.value === ReviewMode.ByMeaning) correct = currentWord.value!.text;
     else correct = wm.text;
@@ -343,24 +342,5 @@ function rfNewWord() {
     box-shadow:
         inset 0 2px 4px rgba(0, 0, 0, 0.2),
         0 1px 2px rgba(50, 132, 255, 0.2);
-}
-</style>
-<style>
-.input-correct {
-    color: #67c23a;
-}
-
-.input-wrong {
-    color: #f56c6c;
-}
-
-.bk-correct {
-    background-color: #b3e19d;
-    transition: background-color 1s ease;
-}
-
-.bk-wrong {
-    background-color: #fab6b6;
-    transition: background-color 1s ease;
 }
 </style>

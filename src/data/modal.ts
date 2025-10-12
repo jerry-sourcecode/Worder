@@ -72,10 +72,10 @@ class Word {
     /** 词义 */
     private _meaning: WordMeaningSet[];
     /** 单词的唯一标识 */
-    private readonly _id: number;
+    private readonly _id: string;
 
     constructor(
-        id: number,
+        id: string,
         text: string,
         meaning: (WordMeaningSet | WordMeaning[])[] = [],
         synForm: string[] = [],
@@ -102,7 +102,7 @@ class Word {
     }
 
     /** 单词的唯一标识 */
-    get id(): number {
+    get id(): string {
         return this._id;
     }
 

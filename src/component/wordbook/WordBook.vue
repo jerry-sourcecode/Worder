@@ -79,14 +79,31 @@ const dataStore = useData();
 
 const currentHover = ref<string | null>(null);
 
-function calLevel(id: string) {
+function calLevel(id: string, by: ReviewMode) {
     const prio = Math.min(
-        getWordPriority(dataStore.getWordsById(id)!, ReviewMode.ByWord),
-        getWordPriority(dataStore.getWordsById(id)!, ReviewMode.ByMeaning)
+        by & ReviewMode.ByWord
+            ? getWordPriority(dataStore.getWordsById(id)!, ReviewMode.ByWord)
+            : Infinity,
+        by & ReviewMode.ByMeaning
+            ? getWordPriority(dataStore.getWordsById(id)!, ReviewMode.ByMeaning)
+            : Infinity
     );
     if (prio >= 1 && prio <= 19) return 1;
     if (prio >= 20 && prio <= 39) return 2;
     return 3;
+}
+
+/**
+ * 获取允许的复习模式
+ * @return {ReviewMode} 允许的复习模式，可能是按单词或按意思复习，或两者的组合
+ */
+function getAllowReviewMode(): ReviewMode {
+    let rm = 0;
+    if (dataStore.setting.reviewContent.byWord) {
+        rm |= ReviewMode.ByWord;
+    }
+    if (dataStore.setting.reviewContent.byMeaning) rm |= ReviewMode.ByMeaning;
+    return rm as ReviewMode;
 }
 
 const sortedWords = computed(() => {
@@ -96,7 +113,7 @@ const sortedWords = computed(() => {
         let res = 0;
         switch (dataStore.setting.sort.sortBy) {
             case SortBy.Priority:
-                res = calLevel(a?.id) - calLevel(b?.id);
+                res = calLevel(a?.id, getAllowReviewMode()) - calLevel(b?.id, getAllowReviewMode());
                 break;
             case SortBy.Dictionary:
                 res = a?.text < b?.text ? -1 : 1;
@@ -125,7 +142,7 @@ const sortedWords = computed(() => {
 const searchText = ref('');
 
 function getImg(id: string) {
-    switch (calLevel(id)) {
+    switch (calLevel(id, getAllowReviewMode())) {
         case 1:
             return L1Img;
         case 2:

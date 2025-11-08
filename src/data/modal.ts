@@ -397,6 +397,7 @@ class Setting {
         byMeaning: true,
     };
     nowWordBookName: string = '默认词书';
+    defaultAnnotations: string = '';
     sort: {
         sortBy: SortBy;
         // 倒序排序

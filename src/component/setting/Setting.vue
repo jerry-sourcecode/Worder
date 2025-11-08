@@ -44,6 +44,13 @@
                             label="翻译题：给定词义，要求写出对应单词。"
                         />
                     </el-form-item>
+                    <el-form-item label="默认注释">
+                        <el-input
+                            v-model="dataStore.setting.defaultAnnotations"
+                            type="textarea"
+                            :autosize="{ minRows: 2 }"
+                        />
+                    </el-form-item>
                 </el-tab-pane>
                 <el-tab-pane label="词性" name="pos">
                     <el-form-item label="可选词性" style="display: flex">

@@ -154,7 +154,7 @@ import { translate } from '@/utils/utils.ts';
 
 const dataStore = useData();
 
-const form = ref<Word>(new Word('', '', []));
+const form = ref<Word>(new Word('', '', [], [], dataStore.setting.defaultAnnotations));
 const form_cache = ref<Word | null>(null);
 
 const isMeaningEditing = ref(false);

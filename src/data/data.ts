@@ -180,6 +180,22 @@ export const useData = defineStore('data', () => {
             setting.value = TypeJson.parse<Setting>(API.getData('setting')!);
     }
 
+    function toJSON(): string {
+        return JSON.stringify({
+            words: TypeJson.stringify(words.value),
+            POS: TypeJson.stringify(POS.value),
+            setting: TypeJson.stringify(setting.value),
+        });
+    }
+
+    function fromJSON(json: string): void {
+        const { words: _words, POS: _POS, setting: _setting } = JSON.parse(json);
+        words.value = TypeJson.parse<WordBook[]>(JSON.stringify(_words));
+        POS.value = TypeJson.parse<string[]>(JSON.stringify(_POS));
+        setting.value = TypeJson.parse<Setting>(JSON.stringify(_setting));
+        location.reload();
+    }
+
     return {
         addWord,
         getWordsById,
@@ -192,5 +208,7 @@ export const useData = defineStore('data', () => {
         AWM,
         setting,
         words,
+        toJSON,
+        fromJSON,
     };
 });

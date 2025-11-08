@@ -4,6 +4,14 @@
             <el-tabs model-value="user">
                 <el-tab-pane label="用户" name="user">
                     <p class="desc">欢迎您，尊贵的用户</p>
+                    <el-button @click="downloadTxtFile(dataStore.toJSON(), `data`)"
+                        >将数据保存到本地</el-button
+                    >
+                    <el-button
+                        type="danger"
+                        @click="submitDocuments().then((res) => dataStore.fromJSON(res))"
+                        >读取数据，这会导致原有数据被覆盖</el-button
+                    >
                     <el-button type="danger" @click="onClearDataBtnClick">删除所有数据</el-button>
                 </el-tab-pane>
                 <el-tab-pane label="词书" name="book">
@@ -110,6 +118,7 @@ import API from '@/utils/api.ts';
 import List from '@/component/List.vue';
 import { WordBook } from '@/data/modal.ts';
 import { useEmitter } from '@/utils/emitter.ts';
+import { downloadTxtFile, submitDocuments } from '@/utils/utils.ts';
 
 const dataStore = useData();
 

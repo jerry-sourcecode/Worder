@@ -32,9 +32,9 @@ type SortBy = (typeof SortBy)[keyof typeof SortBy];
 // 复习的方式，即复习时展示的元素
 const ReviewMode = {
     /** 展示单词，要求写出意思 */
-    ByWord: 0,
+    ByWord: 0x01,
     /** 展示意思，要求写出单词 */
-    ByMeaning: 1,
+    ByMeaning: 0x02,
 } as const;
 type ReviewMode = (typeof ReviewMode)[keyof typeof ReviewMode];
 
@@ -397,6 +397,7 @@ class Setting {
         byMeaning: true,
     };
     nowWordBookName: string = '默认词书';
+    defaultAnnotations: string = '';
     sort: {
         sortBy: SortBy;
         // 倒序排序

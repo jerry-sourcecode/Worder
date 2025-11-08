@@ -360,4 +360,45 @@ class Queue<T> {
     }
 }
 
-export { calcProficiency, calcTimeDiffLevel, translate, Queue, getWordPriority, toHtml };
+function downloadTxtFile(content: string, fileName: string, fileType: string = 'text/plain') {
+    // 创建Blob对象
+    const blob = new Blob([content], { type: fileType });
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    // 触发下载
+    link.click();
+    link.remove();
+}
+
+function submitDocuments() {
+    const link = document.createElement('input');
+    link.type = 'file';
+
+    link.click();
+
+    return new Promise<string>((resolve, reject) => {
+        link.addEventListener('change', () => {
+            let reader = new FileReader();
+            reader.readAsText(link.files![0]); //读取文件的内容
+            link.remove();
+            reader.onload = function () {
+                const res = this.result;
+                if (!res) reject('No File');
+                else resolve(res!.toString());
+            };
+        });
+    });
+}
+
+export {
+    calcProficiency,
+    calcTimeDiffLevel,
+    translate,
+    Queue,
+    getWordPriority,
+    toHtml,
+    downloadTxtFile,
+    submitDocuments,
+};

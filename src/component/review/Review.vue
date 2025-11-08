@@ -34,14 +34,15 @@
                     <el-input
                         v-model="transText"
                         placeholder="在此输入翻译的结果"
+                        type="textarea"
                         class="h-full"
                         :input-style="
-                            `font-size: 40px; height: 100%; text-align:center;` +
+                            `font-size: 40px; height: 100%;` +
                             `color: #f56c6c;`
                                 .if(state === 'Wrong')
                                 .elif(state === `Correct`, `color: #67c23a;`)
                         "
-                        @keydown="onInputKeyDown($event)"
+                        @keydown="onInputKeyDown()"
                     />
                 </div>
             </el-splitter-panel>
@@ -211,15 +212,15 @@ function getCurrentWord(): Word | undefined {
     return dataStore.getWordsById(minWordId) ?? undefined;
 }
 
-function onInputKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-        if (transText.value) checkTranslation();
-    } else {
-        if (state.value === 'Wrong') {
-            state.value = 'Answering';
-            transText.value = '';
-        }
+function onInputKeyDown() {
+    // if (e.key === 'Enter') {
+    //     if (transText.value) checkTranslation();
+    // } else {
+    if (state.value === 'Wrong') {
+        state.value = 'Answering';
+        transText.value = '';
     }
+    // }
 }
 
 /**

@@ -10,9 +10,6 @@ export default defineConfig({
             '@': path.resolve(__dirname, 'src'),
         },
     },
-    build: {
-        outDir: 'docs',
-    },
     server: {
         port: 5173,
     },
